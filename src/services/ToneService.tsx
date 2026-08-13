@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 import { useToneStore } from "../store/useToneStore";
@@ -6,6 +6,7 @@ import { useSettingsStore } from "../store/useSettingsStore";
 
 export default function ToneService() {
   const webViewRef = useRef<WebView>(null);
+  const [isWebViewReady, setIsWebViewReady] = useState(false);
   const { lastPlayedNote, playCount } = useToneStore();
   const { instrumentPreference } = useSettingsStore();
 
@@ -71,11 +72,11 @@ export default function ToneService() {
 
   // Change Instrument
   useEffect(() => {
-    if (webViewRef.current) {
+    if (webViewRef.current && isWebViewReady) {
       const msg = JSON.stringify({ type: "LOAD_INSTRUMENT", instrument: instrumentPreference });
       webViewRef.current.injectJavaScript(`handleMessage('${msg}'); true;`);
     }
-  }, [instrumentPreference]);
+  }, [instrumentPreference, isWebViewReady]);
 
   // Play Note
   useEffect(() => {
@@ -95,6 +96,7 @@ export default function ToneService() {
           const data = JSON.parse(event.nativeEvent.data);
           console.log("[ToneService]", data);
         }}
+        onLoadEnd={() => setIsWebViewReady(true)}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         mediaPlaybackRequiresUserAction={false}

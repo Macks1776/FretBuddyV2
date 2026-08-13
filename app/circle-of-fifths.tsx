@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Key } from "@tonaljs/tonal";
 import { CIRCLE_DATA, CirclePosition } from "../src/utils/circleOfFifthsData";
-import CircleOfFifthsVisual from "../src/components/CircleOfFifthsVisual";
+import CircleOfFifthsVisual from "../src/components/theory/CircleOfFifthsVisual";
 import { useTheme } from "../src/hooks/useTheme";
 
 export default function CircleOfFifthsScreen() {

@@ -6,7 +6,7 @@ import { useChordExplorerStore, FretSelection } from "../src/store/useChordExplo
 import { useSettingsStore } from "../src/store/useSettingsStore";
 import { useToneStore } from "../src/store/useToneStore";
 import { DEFAULT_TUNINGS } from "../src/utils/tunings";
-import ChordBuilderFretboard from "../src/components/ChordBuilderFretboard";
+import ChordExplorer from "../src/components/ChordExplorer";
 import { useTheme } from "../src/hooks/useTheme";
 import * as Haptics from "expo-haptics";
 
@@ -245,7 +245,7 @@ export default function ChordExplorerScreen() {
       )}
 
       <View style={styles.fretboardWrapper}>
-        <ChordBuilderFretboard overrideTuningId={resolvedTuningId} />
+        <ChordExplorer overrideTuningId={resolvedTuningId} />
       </View>
     </SafeAreaView>
   );

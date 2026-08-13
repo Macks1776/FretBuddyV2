@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
-import { CIRCLE_DATA } from "../utils/circleOfFifthsData";
-import { useTheme } from "../hooks/useTheme";
+import Svg, { Path } from "react-native-svg";
+import { CIRCLE_DATA } from "../../utils/circleOfFifthsData";
+import { useTheme } from "../../hooks/useTheme";
 
 interface Props {
   activeKey: string;
@@ -23,8 +24,36 @@ export default function CircleOfFifthsVisual({ activeKey, onSelectKey }: Props) 
   const outerNodeSize = 44;
   const innerNodeSize = 34;
 
+  // Active Position for the Wedge
+  let activePosition = 0;
+  const activeItem = CIRCLE_DATA.find(c => c.majorKey === activeKey || c.minorKey === activeKey);
+  if (activeItem) {
+    activePosition = activeItem.position;
+  }
+
+  // Calculate SVG Wedge to highlight the diatonic chords (P-1, P, P+1)
+  const wedgeRadius = outerRadius + outerNodeSize / 2 + 10; 
+  const startAngle = (activePosition - 1.5) * 30 * Math.PI / 180 - Math.PI / 2;
+  const endAngle = (activePosition + 1.5) * 30 * Math.PI / 180 - Math.PI / 2;
+  
+  const startX = center + wedgeRadius * Math.cos(startAngle);
+  const startY = center + wedgeRadius * Math.sin(startAngle);
+  const endX = center + wedgeRadius * Math.cos(endAngle);
+  const endY = center + wedgeRadius * Math.sin(endAngle);
+  
+  const wedgePath = `M ${center} ${center} L ${startX} ${startY} A ${wedgeRadius} ${wedgeRadius} 0 0 1 ${endX} ${endY} Z`;
+
   return (
     <View style={[styles.container, { width: containerSize, height: containerSize }]}>
+      {/* Active Segment Highlight */}
+      <Svg height={containerSize} width={containerSize} style={StyleSheet.absoluteFill}>
+        <Path 
+          d={wedgePath} 
+          fill={colors.tint} 
+          opacity={isDark ? 0.25 : 0.15} 
+        />
+      </Svg>
+
       {/* Decorative concentric circles */}
       <View style={[styles.decorativeRing, { 
         width: outerRadius * 2, height: outerRadius * 2, borderRadius: outerRadius,
@@ -35,7 +64,7 @@ export default function CircleOfFifthsVisual({ activeKey, onSelectKey }: Props) 
         borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" 
       }]} />
 
-      {CIRCLE_DATA.map((item) => {
+      {CIRCLE_DATA.map((item: any) => {
         // Calculate angle (0 is at 12 o'clock, progressing clockwise)
         const angle = (item.position * 30 * Math.PI) / 180 - Math.PI / 2;
         

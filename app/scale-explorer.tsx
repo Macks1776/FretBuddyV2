@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, Modal, Switch } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import Fretboard from "../src/components/Fretboard";
+import ScaleExplorer from "../src/components/ScaleExplorer";
 import { useFretboardStore, LayoutMode } from "../src/store/useFretboardStore";
 import { useSettingsStore } from "../src/store/useSettingsStore";
 import { DEFAULT_TUNINGS } from "../src/utils/tunings";
@@ -335,7 +335,7 @@ export default function FretboardScreen() {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
         <View style={styles.fretboardContainer}>
-          <Fretboard />
+          <ScaleExplorer />
         </View>
 
         <Pressable 
@@ -366,7 +366,7 @@ export default function FretboardScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <View style={styles.horizontalFretboardArea}>
-        <Fretboard />
+        <ScaleExplorer />
       </View>
       <View style={[styles.horizontalMenuArea, { backgroundColor: colors.background, shadowColor: colors.text }]}>
         {renderMenuControls()}

@@ -1,5 +1,6 @@
 export type NoteDisplayPreference = 'letter' | 'interval' | 'both';
 export type ColorPreference = 'interval' | 'static';
+export type AccidentalPreference = 'sharp' | 'flat';
 export type InstrumentPreference = 'acoustic_guitar_nylon' | 'acoustic_guitar_steel' | 'electric_guitar_clean' | 'electric_bass_finger';
 export type ThemePreference = 'system' | 'light' | 'dark';
 

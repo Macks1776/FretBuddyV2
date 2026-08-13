@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert } from "react-native";
 import { useSettingsStore } from "../src/store/useSettingsStore";
 import { useToneStore } from "../src/store/useToneStore";
-import { Tuning, NoteDisplayPreference, ColorPreference, InstrumentPreference, ThemePreference } from "../src/types/settings";
+import { Tuning, NoteDisplayPreference, ColorPreference, InstrumentPreference, ThemePreference, AccidentalPreference } from "../src/types/settings";
 import { useTheme } from "../src/hooks/useTheme";
 
 type Accidental = "flat" | "natural" | "sharp";
@@ -101,11 +101,13 @@ export default function SettingsScreen() {
   const {
     noteDisplayPreference,
     colorPreference,
+    accidentalPreference,
     instrumentPreference,
     themePreference,
     customTunings,
     setNoteDisplayPreference,
     setColorPreference,
+    setAccidentalPreference,
     setInstrumentPreference,
     setThemePreference,
     saveCustomTuning,
@@ -187,6 +189,28 @@ export default function SettingsScreen() {
                 noteDisplayPreference === pref && [styles.segmentTextActive, { color: colors.tint }]
               ]}>
                 {pref.charAt(0).toUpperCase() + pref.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Accidentals</Text>
+        <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
+          {(["sharp", "flat"] as AccidentalPreference[]).map((pref) => (
+            <Pressable
+              key={pref}
+              style={[
+                styles.segmentBtn, 
+                accidentalPreference === pref && [styles.segmentBtnActive, { backgroundColor: colors.surface }]
+              ]}
+              onPress={() => setAccidentalPreference(pref)}
+            >
+              <Text style={[
+                styles.segmentText, 
+                { color: colors.textSecondary },
+                accidentalPreference === pref && [styles.segmentTextActive, { color: colors.tint }]
+              ]}>
+                {pref === "sharp" ? "Sharps (♯)" : "Flats (♭)"}
               </Text>
             </Pressable>
           ))}

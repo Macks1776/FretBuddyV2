@@ -11,14 +11,19 @@ export default function Dashboard() {
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Master the fretboard</Text>
 
       <View style={styles.menu}>
-        <Link href="/fretboard" asChild>
+        <Link href="/scale-explorer" asChild>
           <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Fretboard</Text>
+            <Text style={styles.buttonText}>Scale Explorer</Text>
           </Pressable>
         </Link>
         <Link href="/chord-explorer" asChild>
           <Pressable style={styles.button}>
             <Text style={styles.buttonText}>Chord Explorer</Text>
+          </Pressable>
+        </Link>
+        <Link href="/pattern-explorer" asChild>
+          <Pressable style={styles.button}>
+            <Text style={styles.buttonText}>Pattern Explorer</Text>
           </Pressable>
         </Link>
         <Link href="/circle-of-fifths" asChild>

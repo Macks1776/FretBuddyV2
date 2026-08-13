@@ -1,17 +1,19 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NoteDisplayPreference, ColorPreference, Tuning, InstrumentPreference, ThemePreference } from "../types/settings";
+import { NoteDisplayPreference, ColorPreference, Tuning, InstrumentPreference, ThemePreference, AccidentalPreference } from "../types/settings";
 import { DEFAULT_TUNINGS } from "../utils/tunings";
 
 interface SettingsState {
   noteDisplayPreference: NoteDisplayPreference;
   colorPreference: ColorPreference;
+  accidentalPreference: AccidentalPreference;
   instrumentPreference: InstrumentPreference;
   themePreference: ThemePreference;
   customTunings: Tuning[];
   setNoteDisplayPreference: (pref: NoteDisplayPreference) => void;
   setColorPreference: (pref: ColorPreference) => void;
+  setAccidentalPreference: (pref: AccidentalPreference) => void;
   setInstrumentPreference: (pref: InstrumentPreference) => void;
   setThemePreference: (pref: ThemePreference) => void;
   saveCustomTuning: (tuning: Tuning) => void;
@@ -24,6 +26,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set, get) => ({
       noteDisplayPreference: "both",
       colorPreference: "interval",
+      accidentalPreference: "sharp",
       instrumentPreference: "acoustic_guitar_nylon",
       themePreference: "system",
       customTunings: [],
@@ -33,6 +36,9 @@ export const useSettingsStore = create<SettingsState>()(
 
       setColorPreference: (pref) =>
         set({ colorPreference: pref }),
+
+      setAccidentalPreference: (pref) =>
+        set({ accidentalPreference: pref }),
 
       setInstrumentPreference: (pref) =>
         set({ instrumentPreference: pref }),
