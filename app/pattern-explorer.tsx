@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Modal } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Modal, Switch } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
+import HapticService from '../src/services/HapticService';
 import PatternExplorer from "../src/components/PatternExplorer";
 import { usePatternExplorerStore } from "../src/store/usePatternExplorerStore";
 import { useSettingsStore } from "../src/store/useSettingsStore";
@@ -20,7 +20,7 @@ const SimplePicker = ({ label, value, options, onSelect, colors }: { label: stri
   return (
     <View style={styles.pickerWrapper}>
       <Text style={[styles.pickerLabel, { color: colors.textSecondary }]}>{label}</Text>
-      <Pressable style={[styles.pickerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setIsOpen(true); }}>
+      <Pressable style={[styles.pickerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => { HapticService.medium(); setIsOpen(true); }}>
         <Text style={[styles.pickerBtnText, { color: colors.text }]}>{selectedLabel} ▾</Text>
       </Pressable>
 
@@ -34,7 +34,7 @@ const SimplePicker = ({ label, value, options, onSelect, colors }: { label: stri
                   key={opt.value} 
                   style={[styles.modalItem, { borderBottomColor: colors.border }]}
                   onPress={() => { 
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    HapticService.medium();
                     onSelect(opt.value); 
                     setIsOpen(false); 
                   }}
@@ -66,9 +66,11 @@ export default function PatternExplorerScreen() {
     toggleGlobalNote,
     toggleString,
     clearAll,
+    localPlaybackEnabled,
+    setLocalPlaybackEnabled,
   } = usePatternExplorerStore();
 
-  const { customTunings, accidentalPreference } = useSettingsStore();
+  const { customTunings, accidentalPreference, notePlaybackEnabled } = useSettingsStore();
   const { colors } = useTheme();
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [isStringsExpanded, setIsStringsExpanded] = useState(false);
@@ -78,8 +80,10 @@ export default function PatternExplorerScreen() {
   const tuning = allTunings.find(t => t.id === activeTuningId) || allTunings[0];
   const notes = accidentalPreference === "flat" ? NOTES_FLAT : NOTES_SHARP;
 
+  const isPlaybackActive = localPlaybackEnabled !== null ? localPlaybackEnabled : notePlaybackEnabled;
+
   const handleApplyTriad = (suffix: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    HapticService.medium();
     const triadNotes = tonalService.getChordNotes(`${triadRoot}${suffix}`);
     const normalizedNotes = triadNotes.map(n => {
       const chroma = tonalService.getChroma(n);
@@ -100,7 +104,7 @@ export default function PatternExplorerScreen() {
             <Pressable 
               style={[styles.segmentBtn, layoutMode === "horizontal" && [styles.segmentBtnActive, { backgroundColor: colors.card }]]}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                HapticService.medium();
                 setLayoutMode("horizontal");
               }}
             >
@@ -109,7 +113,7 @@ export default function PatternExplorerScreen() {
             <Pressable 
               style={[styles.segmentBtn, layoutMode === "fullscreen" && [styles.segmentBtnActive, { backgroundColor: colors.card }]]}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                HapticService.medium();
                 setLayoutMode("fullscreen");
               }}
             >
@@ -128,11 +132,22 @@ export default function PatternExplorerScreen() {
           />
         </View>
 
+        <View style={styles.controlRow}>
+          <View style={styles.toggleRow}>
+            <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Note Playback</Text>
+            <Switch 
+              value={isPlaybackActive} 
+              onValueChange={(v) => { HapticService.medium(); setLocalPlaybackEnabled(v); }}
+              trackColor={{ false: colors.border, true: colors.tint }}
+            />
+          </View>
+        </View>
+
         {/* Note Toggles Grid */}
         <View style={styles.controlRow}>
           <View style={styles.headerRow}>
              <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Toggle Notes</Text>
-             <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); clearAll(); }}>
+             <Pressable onPress={() => { HapticService.medium(); clearAll(); }}>
                <Text style={[styles.clearBtnText, { color: colors.danger }]}>Clear All</Text>
              </Pressable>
           </View>
@@ -149,7 +164,7 @@ export default function PatternExplorerScreen() {
                     isActive && [styles.noteBtnActive, { backgroundColor: colors.tint, borderColor: colors.tint }]
                   ]}
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    HapticService.light();
                     toggleGlobalNote(note);
                   }}
                 >
@@ -232,7 +247,7 @@ export default function PatternExplorerScreen() {
                       isVisible && [styles.stringBtnActive, { backgroundColor: colors.tint, borderColor: colors.tint }]
                     ]}
                     onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      HapticService.light();
                       toggleString(idx);
                     }}
                   >
@@ -258,7 +273,7 @@ export default function PatternExplorerScreen() {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
         <View style={styles.fretboardContainer}>
-          <PatternExplorer />
+          <PatternExplorer isPlaybackActive={isPlaybackActive} />
         </View>
 
         <Pressable 
@@ -289,7 +304,7 @@ export default function PatternExplorerScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <View style={styles.horizontalFretboardArea}>
-        <PatternExplorer />
+        <PatternExplorer isPlaybackActive={isPlaybackActive} />
       </View>
       <View style={[styles.horizontalMenuArea, { backgroundColor: colors.background, shadowColor: colors.text }]}>
         {renderMenuControls()}
@@ -312,12 +327,10 @@ const styles = StyleSheet.create({
   },
   horizontalMenuArea: {
     flex: 1,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
     shadowOffset: { width: 0, height: -5 },
     elevation: 10,
   },
@@ -347,23 +360,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   
   // Note Grid
   noteGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    justifyContent: "center",
+    gap: 12,
   },
   noteBtn: {
-    width: "22%", // 4 columns
-    aspectRatio: 1,
+    width: 48,
+    height: 48,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 8,
+    borderRadius: 24, // perfect circle
     borderWidth: 1,
   },
   noteBtnActive: {
     borderWidth: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    transform: [{ scale: 1.05 }],
   },
   noteBtnText: {
     fontSize: 16,
@@ -509,10 +533,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.3)",
   },
   overlayMenu: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    height: "60%",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    height: "65%",
   },
   overlayHeader: {
     flexDirection: "row",

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
-import { SCALES, CHORDS, TheoryScale, TheoryChord } from "../src/utils/theoryData";
+import { SCALES, CHORDS, PROGRESSIONS, TheoryScale, TheoryChord, TheoryProgression } from "../src/utils/theoryData";
 import { useTheme } from "../src/hooks/useTheme";
 
 export default function CheatSheetScreen() {
-  const [activeTab, setActiveTab] = useState<"scales" | "chords" | "circleOfFifths">("scales");
+  const [activeTab, setActiveTab] = useState<"scales" | "chords" | "progressions" | "circleOfFifths">("scales");
   const { colors, isDark } = useTheme();
 
   const renderBadgeRow = (label: string, items: string[], isSteps: boolean = false) => (
@@ -49,6 +49,25 @@ export default function CheatSheetScreen() {
       <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{chord.description}</Text>
       <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
       {renderBadgeRow("Chord Formula", chord.formula)}
+    </View>
+  );
+
+  const renderProgressionCard = (prog: TheoryProgression) => (
+    <View key={prog.id} style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.text }]}>
+      <Text style={[styles.cardTitle, { color: colors.text }]}>{prog.name}</Text>
+      <Text style={[styles.cardVibe, { color: colors.tint }]}>{prog.vibe}</Text>
+      <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{prog.description}</Text>
+      
+      <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
+      
+      {renderBadgeRow("Progression", prog.chords, true)}
+      
+      <View style={{ marginTop: 12 }}>
+        <Text style={[styles.badgeLabel, { color: colors.textSecondary }]}>Popular Examples</Text>
+        {prog.examples.map((ex, idx) => (
+          <Text key={idx} style={[styles.exampleText, { color: colors.text }]}>• {ex}</Text>
+        ))}
+      </View>
     </View>
   );
 
@@ -100,6 +119,12 @@ export default function CheatSheetScreen() {
             <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "chords" && styles.tabTextActive]}>Chords</Text>
           </Pressable>
           <Pressable 
+            style={[styles.tabBtn, { backgroundColor: colors.surface }, activeTab === "progressions" && [styles.tabBtnActive, { backgroundColor: colors.tint }]]}
+            onPress={() => setActiveTab("progressions")}
+          >
+            <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "progressions" && styles.tabTextActive]}>Progressions</Text>
+          </Pressable>
+          <Pressable 
             style={[styles.tabBtn, { backgroundColor: colors.surface }, activeTab === "circleOfFifths" && [styles.tabBtnActive, { backgroundColor: colors.tint }]]}
             onPress={() => setActiveTab("circleOfFifths")}
           >
@@ -112,6 +137,7 @@ export default function CheatSheetScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {activeTab === "scales" && SCALES.map(renderScaleCard)}
         {activeTab === "chords" && CHORDS.map(renderChordCard)}
+        {activeTab === "progressions" && PROGRESSIONS.map(renderProgressionCard)}
         {activeTab === "circleOfFifths" && renderCircleOfFifths()}
       </ScrollView>
     </View>
@@ -169,6 +195,12 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 6,
   },
+  cardVibe: {
+    fontSize: 14,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
   cardDesc: {
     fontSize: 15,
     lineHeight: 22,
@@ -176,6 +208,11 @@ const styles = StyleSheet.create({
   cardDivider: {
     height: 1,
     marginVertical: 16,
+  },
+  exampleText: {
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 4,
   },
 
   // Badges

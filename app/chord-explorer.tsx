@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Chord, Note, Interval } from "@tonaljs/tonal";
 import { useChordExplorerStore, FretSelection } from "../src/store/useChordExplorerStore";
@@ -20,19 +20,23 @@ export default function ChordExplorerScreen() {
     dictSuffix, setDictSuffix,
     dictVoicingIndex, setDictVoicingIndex,
     fretStart, setFretStart, 
+    capoFret, setCapoFret,
     selectedFrets, setAllSelections,
-    activeTuningId, clearSelections 
+    activeTuningId, setActiveTuningId, clearSelections,
+    localPlaybackEnabled, setLocalPlaybackEnabled 
   } = useChordExplorerStore();
   
-  const { customTunings } = useSettingsStore();
+  const { customTunings, notePlaybackEnabled } = useSettingsStore();
   const { playNote } = useToneStore();
   const { colors } = useTheme();
 
   // Dictionary logic: force standard tuning in Dictionary mode
   const resolvedTuningId = explorerMode === "dictionary" ? "standard-6" : activeTuningId;
   const allTunings = [...DEFAULT_TUNINGS, ...customTunings];
+  
+  const isPlaybackActive = localPlaybackEnabled !== null ? localPlaybackEnabled : notePlaybackEnabled;
   const tuning = allTunings.find(t => t.id === resolvedTuningId) || allTunings[0];
-  const strings = tuning.notes;
+  const strings = tuning.notes.map(note => Note.transpose(note, Interval.fromSemitones(capoFret)));
 
   // Active pitches for the current fretboard selection
   const activePitches = strings.map((openNote, strIdx) => {
@@ -142,6 +146,15 @@ export default function ChordExplorerScreen() {
             <Text style={[styles.segmentText, { color: colors.textSecondary }, explorerMode === "dictionary" && [styles.segmentTextActive, { color: colors.tint }]]}>Dictionary</Text>
           </Pressable>
         </View>
+
+        <View style={styles.toggleRow}>
+          <Text style={[styles.controlLabel, { color: colors.text }]}>Note Playback</Text>
+          <Switch 
+            value={isPlaybackActive} 
+            onValueChange={(v) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setLocalPlaybackEnabled(v); }}
+            trackColor={{ false: colors.border, true: colors.tint }}
+          />
+        </View>
       </View>
 
       {explorerMode === "dictionary" ? (
@@ -230,22 +243,38 @@ export default function ChordExplorerScreen() {
             </View>
           </View>
           
-          <View style={[styles.stepperContainer, { backgroundColor: colors.surface, marginTop: 16 }]}>
-            <Pressable style={styles.stepperBtn} onPress={() => handleShiftFret(-1)}>
-              <Text style={[styles.stepperIcon, { color: colors.text }]}>◀</Text>
-            </Pressable>
-            <Text style={[styles.stepperText, { color: colors.text }]}>
-              Fret {fretStart}
-            </Text>
-            <Pressable style={styles.stepperBtn} onPress={() => handleShiftFret(1)}>
-              <Text style={[styles.stepperIcon, { color: colors.text }]}>▶</Text>
-            </Pressable>
+          <View style={{ flexDirection: "row", gap: 12, marginTop: 16 }}>
+            {/* Capo Stepper */}
+            <View style={[styles.stepperContainer, { backgroundColor: colors.surface, flex: 1, marginTop: 0 }]}>
+              <Pressable style={styles.stepperBtn} onPress={() => setCapoFret(capoFret - 1)}>
+                <Text style={[styles.stepperIcon, { color: colors.text }]}>◀</Text>
+              </Pressable>
+              <Text style={[styles.stepperText, { color: colors.text }]}>
+                Capo {capoFret}
+              </Text>
+              <Pressable style={styles.stepperBtn} onPress={() => setCapoFret(capoFret + 1)}>
+                <Text style={[styles.stepperIcon, { color: colors.text }]}>▶</Text>
+              </Pressable>
+            </View>
+
+            {/* Fret Stepper */}
+            <View style={[styles.stepperContainer, { backgroundColor: colors.surface, flex: 1, marginTop: 0 }]}>
+              <Pressable style={styles.stepperBtn} onPress={() => handleShiftFret(-1)}>
+                <Text style={[styles.stepperIcon, { color: colors.text }]}>◀</Text>
+              </Pressable>
+              <Text style={[styles.stepperText, { color: colors.text }]}>
+                Fret {fretStart}
+              </Text>
+              <Pressable style={styles.stepperBtn} onPress={() => handleShiftFret(1)}>
+                <Text style={[styles.stepperIcon, { color: colors.text }]}>▶</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       )}
 
       <View style={styles.fretboardWrapper}>
-        <ChordExplorer overrideTuningId={resolvedTuningId} />
+        <ChordExplorer overrideTuningId={resolvedTuningId} isPlaybackActive={isPlaybackActive} />
       </View>
     </SafeAreaView>
   );
@@ -277,15 +306,32 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     elevation: 2,
   },
+  controlsArea: {
+    padding: 24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    borderBottomWidth: 1,
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: -5 },
+    elevation: 10,
+    zIndex: 10,
+  },
   segmentText: {
     fontSize: 14,
     fontWeight: "600",
   },
   segmentTextActive: {},
-  controlsArea: {
-    padding: 16,
-    borderBottomWidth: 1,
-    zIndex: 10,
+  controlLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 16,
   },
   dictionaryPickers: {
   },

@@ -149,23 +149,26 @@ const styles = StyleSheet.create({
   rowWrapper: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    justifyContent: "center",
+    gap: 6,
   },
   chip: {
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     borderRadius: 8,
     borderWidth: 1,
+    alignItems: "center",
+    minWidth: 40,
   },
   chipText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
   chordChip: {
     borderWidth: 1,
   },
   chordChipText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
   }
 });

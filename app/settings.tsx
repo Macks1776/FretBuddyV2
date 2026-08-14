@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, Switch } from "react-native";
 import { useSettingsStore } from "../src/store/useSettingsStore";
 import { useToneStore } from "../src/store/useToneStore";
-import { Tuning, NoteDisplayPreference, ColorPreference, InstrumentPreference, ThemePreference, AccidentalPreference } from "../src/types/settings";
+import { Tuning, NoteDisplayPreference, ColorPreference, InstrumentPreference, ThemePreference, AccidentalPreference, HapticPreference, NoteDurationPreference } from "../src/types/settings";
 import { useTheme } from "../src/hooks/useTheme";
+import HapticService from "../src/services/HapticService";
+import { Ionicons } from "@expo/vector-icons";
 
 type Accidental = "flat" | "natural" | "sharp";
 
@@ -104,14 +106,22 @@ export default function SettingsScreen() {
     accidentalPreference,
     instrumentPreference,
     themePreference,
+    hapticPreference,
+    noteDurationPreference,
+    isLeftHanded,
     customTunings,
     setNoteDisplayPreference,
     setColorPreference,
     setAccidentalPreference,
     setInstrumentPreference,
     setThemePreference,
+    setHapticPreference,
+    setNoteDurationPreference,
+    setIsLeftHanded,
+    setNotePlaybackEnabled,
     saveCustomTuning,
     deleteCustomTuning,
+    notePlaybackEnabled,
   } = useSettingsStore();
 
   const { playNote } = useToneStore();
@@ -145,10 +155,15 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Display Preferences */}
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Display Preferences</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      {/* General Settings */}
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.text }]}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="settings-outline" size={24} color={colors.text} style={styles.sectionIcon} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>General</Text>
+          </View>
+        </View>
         
         <Text style={[styles.label, { color: colors.textSecondary }]}>App Theme</Text>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
@@ -172,7 +187,78 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Note Notation</Text>
+        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Haptic Feedback</Text>
+        <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
+          {(["off", "light", "medium", "heavy"] as HapticPreference[]).map((pref) => (
+            <Pressable
+              key={pref}
+              style={[
+                styles.segmentBtn, 
+                hapticPreference === pref && [styles.segmentBtnActive, { backgroundColor: colors.surface }]
+              ]}
+              onPress={() => {
+                setHapticPreference(pref);
+                if (pref === 'light') HapticService.light();
+                if (pref === 'medium') HapticService.medium();
+                if (pref === 'heavy') HapticService.heavy();
+              }}
+            >
+              <Text style={[
+                styles.segmentText, 
+                { color: colors.textSecondary },
+                hapticPreference === pref && [styles.segmentTextActive, { color: colors.tint }]
+              ]}>
+                {pref.charAt(0).toUpperCase() + pref.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Orientation</Text>
+        <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
+          <Pressable
+            style={[
+              styles.segmentBtn, 
+              !isLeftHanded && [styles.segmentBtnActive, { backgroundColor: colors.surface }]
+            ]}
+            onPress={() => setIsLeftHanded(false)}
+          >
+            <Text style={[
+              styles.segmentText, 
+              { color: colors.textSecondary },
+              !isLeftHanded && [styles.segmentTextActive, { color: colors.tint }]
+            ]}>
+              Right-Handed
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.segmentBtn, 
+              isLeftHanded && [styles.segmentBtnActive, { backgroundColor: colors.surface }]
+            ]}
+            onPress={() => setIsLeftHanded(true)}
+          >
+            <Text style={[
+              styles.segmentText, 
+              { color: colors.textSecondary },
+              isLeftHanded && [styles.segmentTextActive, { color: colors.tint }]
+            ]}>
+              Left-Handed
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Display & Fretboard */}
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.text }]}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="eye-outline" size={24} color={colors.text} style={styles.sectionIcon} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Display</Text>
+          </View>
+        </View>
+
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Note Notation</Text>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           {(["letter", "interval", "both"] as NoteDisplayPreference[]).map((pref) => (
             <Pressable
@@ -216,26 +302,6 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { marginTop: 16, color: colors.textSecondary }]}>Playback Instrument</Text>
-        <CustomDropdown 
-          title="Select Instrument"
-          valueLabel={
-            {
-              "acoustic_guitar_nylon": "Nylon Acoustic",
-              "acoustic_guitar_steel": "Steel Acoustic",
-              "electric_guitar_clean": "Clean Electric",
-              "electric_bass_finger": "Finger Bass"
-            }[instrumentPreference] || "Nylon Acoustic"
-          }
-          options={[
-            { label: "Nylon Acoustic", value: "acoustic_guitar_nylon" },
-            { label: "Steel Acoustic", value: "acoustic_guitar_steel" },
-            { label: "Clean Electric", value: "electric_guitar_clean" },
-            { label: "Finger Bass", value: "electric_bass_finger" }
-          ]}
-          onSelect={(val) => setInstrumentPreference(val as InstrumentPreference)}
-        />
-
         <Text style={[styles.label, { marginTop: 16, color: colors.textSecondary }]}>Color Coding</Text>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           {(["interval", "static"] as ColorPreference[]).map((pref) => (
@@ -258,11 +324,84 @@ export default function SettingsScreen() {
           ))}
         </View>
       </View>
+        
+      {/* Audio & Playback */}
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.text }]}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="musical-notes-outline" size={24} color={colors.text} style={styles.sectionIcon} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Audio</Text>
+          </View>
+        </View>
+
+        <View style={styles.toggleRow}>
+          <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 0 }]}>Fretboard Note Playback</Text>
+          <Switch 
+            value={notePlaybackEnabled}
+            onValueChange={setNotePlaybackEnabled}
+            trackColor={{ false: colors.border, true: colors.tint }}
+          />
+        </View>
+
+        <Text style={[styles.label, { marginTop: 16, color: colors.textSecondary }]}>Playback Instrument</Text>
+        <CustomDropdown 
+          title="Select Instrument"
+          valueLabel={
+            {
+              "acoustic_guitar_nylon": "Nylon Acoustic",
+              "acoustic_guitar_steel": "Steel Acoustic",
+              "electric_guitar_clean": "Clean Electric",
+              "electric_bass_finger": "Finger Bass"
+            }[instrumentPreference] || "Nylon Acoustic"
+          }
+          options={[
+            { label: "Nylon Acoustic", value: "acoustic_guitar_nylon" },
+            { label: "Steel Acoustic", value: "acoustic_guitar_steel" },
+            { label: "Clean Electric", value: "electric_guitar_clean" },
+            { label: "Finger Bass", value: "electric_bass_finger" }
+          ]}
+          onSelect={(val) => setInstrumentPreference(val as InstrumentPreference)}
+        />
+
+        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Note Ring Duration</Text>
+        <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
+          {(["extra_short", "short", "normal", "long", "extra_long"] as NoteDurationPreference[]).map((pref) => {
+            const labelMap: Record<string, string> = {
+              "extra_short": "XS",
+              "short": "Short",
+              "normal": "Normal",
+              "long": "Long",
+              "extra_long": "XL"
+            };
+            return (
+              <Pressable
+                key={pref}
+                style={[
+                  styles.segmentBtn, 
+                  noteDurationPreference === pref && [styles.segmentBtnActive, { backgroundColor: colors.surface }]
+                ]}
+                onPress={() => setNoteDurationPreference(pref)}
+              >
+                <Text style={[
+                  styles.segmentText, 
+                  { color: colors.textSecondary },
+                  noteDurationPreference === pref && [styles.segmentTextActive, { color: colors.tint }]
+                ]}>
+                  {labelMap[pref]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
 
       {/* Custom Tunings */}
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.text }]}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Custom Tunings</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="options-outline" size={24} color={colors.text} style={styles.sectionIcon} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Tunings</Text>
+          </View>
           <Pressable 
             style={[styles.addBtn, { backgroundColor: colors.tint }]}
             onPress={() => setModalVisible(true)}
@@ -314,17 +453,19 @@ export default function SettingsScreen() {
                 placeholderTextColor={colors.textMuted}
               />
 
-              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Strings (Lowest to Highest)</Text>
+              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Strings (Highest to Lowest Pitch)</Text>
               
               <View style={styles.stringsContainer}>
-                {newTuningNotes.map((noteObj, idx) => (
-                  <View key={idx} style={[styles.stringRow, { borderBottomColor: colors.border }]}>
-                    <View style={styles.stringHeader}>
-                      <Text style={[styles.stringLabel, { color: colors.text }]}>String {idx + 1}</Text>
-                      <Pressable style={styles.playBtn} onPress={() => playNote(formatNoteString(noteObj))}>
-                        <Text style={styles.playBtnText}>▶</Text>
-                      </Pressable>
-                    </View>
+                {[...newTuningNotes].reverse().map((noteObj, revIdx) => {
+                  const idx = newTuningNotes.length - 1 - revIdx;
+                  return (
+                    <View key={idx} style={[styles.stringRow, { borderBottomColor: colors.border }]}>
+                      <View style={styles.stringHeader}>
+                        <Text style={[styles.stringLabel, { color: colors.text }]}>String {revIdx + 1}</Text>
+                        <Pressable style={styles.playBtn} onPress={() => playNote(formatNoteString(noteObj))}>
+                          <Text style={styles.playBtnText}>▶</Text>
+                        </Pressable>
+                      </View>
                     
                     <View style={styles.stringPickers}>
                       <View style={{ flex: 1, marginRight: 8 }}>
@@ -367,12 +508,12 @@ export default function SettingsScreen() {
                       </Pressable>
                     </View>
                   </View>
-                ))}
+                )})}
               </View>
 
               <Pressable 
                 style={[styles.addStringBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                onPress={() => setNewTuningNotes([...newTuningNotes, { note: "E", accidental: "natural", octave: "4" }])}
+                onPress={() => setNewTuningNotes([{ note: "E", accidental: "natural", octave: "2" }, ...newTuningNotes])}
               >
                 <Text style={[styles.addStringText, { color: colors.tint }]}>+ Add String</Text>
               </Pressable>
@@ -396,53 +537,76 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 40,
   },
   section: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 24,
     borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: 24,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  sectionIcon: {
+    marginRight: 8,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 16,
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.5,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
     marginBottom: 8,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 8,
   },
   
   // Segmented Control
   segmentedControl: {
     flexDirection: "row",
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 4,
   },
   segmentBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 2,
     alignItems: "center",
-    borderRadius: 6,
+    borderRadius: 8,
   },
   segmentBtnActive: {
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   segmentText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
   },
   segmentTextActive: {
