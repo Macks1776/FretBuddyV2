@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { tonalService } from '../../services/tonalService';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import type { FretboardProps } from './Fretboard';
 
 const FRET_MARKERS = [3, 5, 7, 9, 15, 17, 19, 21];
@@ -12,8 +13,10 @@ export default function FretboardVertical({
   renderBadge,
   onFretPress,
   onFretLongPress,
-  renderNutControl
+  renderNutControl,
+  isCapoActive
 }: FretboardProps) {
+  const { isLeftHanded } = useSettingsStore();
   const [startFret, endFret] = fretRange;
   const fretsArray = Array.from({ length: endFret - startFret + 1 }, (_, i) => startFret + i);
   // Vertical view: Left is Low E (thick), Right is High E (thin)
@@ -22,7 +25,7 @@ export default function FretboardVertical({
   return (
     <View style={styles.verticalWrapper}>
       {renderNutControl && (
-        <View style={styles.nutControlsRow}>
+        <View style={[styles.nutControlsRow, isLeftHanded && { flexDirection: 'row-reverse' }]}>
           {strings.map((_, strIdx) => (
             <View key={`nut-${strIdx}`} style={styles.nutControlCell}>
               {renderNutControl(strIdx)}
@@ -41,9 +44,16 @@ export default function FretboardVertical({
             const isNut = fretNum === 0;
 
             return (
-              <View key={`v-fret-${fretNum}`} style={[styles.fretRow, isNut && styles.vNutCell]}>
+              <View 
+                key={`v-fret-${fretNum}`} 
+                style={[
+                  styles.fretRow, 
+                  isNut && styles.vNutCell,
+                  isNut && isCapoActive && styles.vCapoNutCell
+                ]}
+              >
                 {/* Fret wire */}
-                {(!isNut && (!isFirstInViewport || fretNum > 1)) && <View style={styles.vFretWire} />}
+                {fretNum > 0 && <View style={styles.vFretWire} />}
                 
                 {/* Fret Markers */}
                 {FRET_MARKERS.includes(fretNum) && (
@@ -58,12 +68,12 @@ export default function FretboardVertical({
 
                 {/* Vertical Fret Label */}
                 {(isFirstInViewport && fretNum > 1) ? (
-                  <Text style={[styles.vFretLabelText, { color: "rgba(255, 255, 255, 0.5)", left: 6 }]}>{fretNum}fr</Text>
+                  <Text style={[styles.vFretLabelText, { color: "rgba(255, 255, 255, 0.5)", left: isLeftHanded ? undefined : 6, right: isLeftHanded ? 6 : undefined }]}>{fretNum}fr</Text>
                 ) : (FRET_MARKERS.includes(fretNum) || DOUBLE_MARKERS.includes(fretNum)) ? (
-                  <Text style={styles.vFretLabelText}>{fretNum}</Text>
+                  <Text style={[styles.vFretLabelText, { left: isLeftHanded ? undefined : 8, right: isLeftHanded ? 8 : undefined }]}>{fretNum}</Text>
                 ) : null}
 
-                <View style={styles.vStringsRow}>
+                <View style={[styles.vStringsRow, isLeftHanded && { flexDirection: 'row-reverse' }]}>
                   {strings.map((openNote, strIdx) => {
                     // String index: 0 is Low E (thick), 5 is High E (thin)
                     const thickness = 5 - (strIdx * 0.8);
@@ -99,7 +109,7 @@ export default function FretboardVertical({
 const styles = StyleSheet.create({
   verticalWrapper: {
     flex: 1,
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "transparent",
     paddingHorizontal: 16,
   },
   nutControlsRow: {
@@ -129,6 +139,10 @@ const styles = StyleSheet.create({
     height: 50,
     borderBottomWidth: 4,
     borderBottomColor: "#ecf0f1",
+  },
+  vCapoNutCell: {
+    borderBottomColor: "#a4b0be", // Silver capo
+    borderBottomWidth: 8,
   },
   vFretWire: {
     position: "absolute",

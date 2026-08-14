@@ -13,6 +13,15 @@ export interface TheoryChord {
   formula: string[]; // 1, 3, 5, etc
 }
 
+export interface TheoryProgression {
+  id: string;
+  name: string;
+  chords: string[]; // e.g. ["I", "V", "vi", "IV"]
+  vibe: string;
+  description: string;
+  examples: string[];
+}
+
 export const SCALES: TheoryScale[] = [
   {
     id: "major",
@@ -126,5 +135,56 @@ export const CHORDS: TheoryChord[] = [
     name: "Suspended 4th (sus4)",
     description: "A chord that demands resolution, replacing the 3rd with a 4th.",
     formula: ["1", "4", "5"]
+  }
+];
+
+export const PROGRESSIONS: TheoryProgression[] = [
+  {
+    id: "pop-punk",
+    name: "The Pop Punk / Epic",
+    chords: ["I", "V", "vi", "IV"],
+    vibe: "Pop, Rock, Anthemic",
+    description: "The most common chord progression in Western popular music. It starts stable, creates tension, moves to a minor emotional chord, and resolves beautifully back home.",
+    examples: ["Let It Be (The Beatles)", "Don't Stop Believin' (Journey)", "With Or Without You (U2)"]
+  },
+  {
+    id: "50s-doo-wop",
+    name: "The 50s Doo-Wop",
+    chords: ["I", "vi", "IV", "V"],
+    vibe: "Nostalgic, Romantic",
+    description: "Extremely popular in the 1950s and 60s. The movement to the minor vi chord creates a romantic, nostalgic feel before climbing back up to the dominant V.",
+    examples: ["Stand By Me (Ben E. King)", "Earth Angel (The Penguins)", "Every Breath You Take (The Police)"]
+  },
+  {
+    id: "blues-12-bar",
+    name: "12-Bar Blues",
+    chords: ["I", "IV", "V"],
+    vibe: "Blues, Rock & Roll, Roots",
+    description: "The foundation of blues and early rock. It traditionally uses dominant 7th chords for all three chords, creating constant tension and a driving feel. Structured over 12 bars.",
+    examples: ["Johnny B. Goode (Chuck Berry)", "Pride and Joy (Stevie Ray Vaughan)", "Hound Dog (Elvis Presley)"]
+  },
+  {
+    id: "jazz-ii-v-i",
+    name: "The Jazz 2-5-1",
+    chords: ["ii", "V", "I"],
+    vibe: "Jazzy, Sophisticated, Smooth",
+    description: "The most important progression in jazz. It provides a strong, smooth resolution to the tonic (I). Usually played with 7th chords (ii7 - V7 - Imaj7).",
+    examples: ["Autumn Leaves", "Fly Me To The Moon (Frank Sinatra)", "Sunday Morning (Maroon 5)"]
+  },
+  {
+    id: "descending-flamenco",
+    name: "Andalusian Cadence",
+    chords: ["vi", "V", "IV", "III"],
+    vibe: "Flamenco, Dramatic, Exotic",
+    description: "A descending progression very common in Flamenco and Spanish music. The final major III chord creates a strong, dramatic tension pulling back to the minor vi.",
+    examples: ["Sultans of Swing (Dire Straits)", "Hit The Road Jack (Ray Charles)", "Runaway (Del Shannon)"]
+  },
+  {
+    id: "creepy-minor",
+    name: "The Creepy Minor",
+    chords: ["i", "VI", "III", "VII"],
+    vibe: "Moody, Epic, Modern Pop",
+    description: "A very common minor key progression used in modern pop and rock. It sounds moody, driving, and slightly dark.",
+    examples: ["Radioactive (Imagine Dragons)", "Boulevard of Broken Dreams (Green Day)", "Snow (Red Hot Chili Peppers)"]
   }
 ];

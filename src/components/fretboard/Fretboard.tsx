@@ -10,6 +10,7 @@ export interface FretboardProps {
   onFretPress: (strIdx: number, fretNum: number, fretPitch: string) => void;
   onFretLongPress?: (strIdx: number, fretNum: number, fretPitch: string) => void;
   renderNutControl?: (strIdx: number) => React.ReactNode;
+  isCapoActive?: boolean;
 }
 
 export default function Fretboard(props: FretboardProps) {

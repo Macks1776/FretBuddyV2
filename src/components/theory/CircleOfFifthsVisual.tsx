@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Pressable, Dimensions, Animated } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { CIRCLE_DATA } from "../../utils/circleOfFifthsData";
 import { useTheme } from "../../hooks/useTheme";
@@ -31,10 +31,34 @@ export default function CircleOfFifthsVisual({ activeKey, onSelectKey }: Props) 
     activePosition = activeItem.position;
   }
 
-  // Calculate SVG Wedge to highlight the diatonic chords (P-1, P, P+1)
+  // Animation for wedge rotation
+  const rotateAnim = useRef(new Animated.Value(activePosition * 30)).current;
+  const currentAngleRef = useRef(activePosition * 30);
+
+  useEffect(() => {
+    let targetAngle = activePosition * 30;
+    const current = currentAngleRef.current;
+    
+    // Calculate shortest path
+    let diff = (targetAngle - (current % 360));
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+
+    const nextAngle = current + diff;
+    currentAngleRef.current = nextAngle;
+
+    Animated.spring(rotateAnim, {
+      toValue: nextAngle,
+      useNativeDriver: true,
+      damping: 18,
+      stiffness: 120,
+    }).start();
+  }, [activePosition]);
+
+  // Calculate SVG Wedge fixed at position 0 (12 o'clock)
   const wedgeRadius = outerRadius + outerNodeSize / 2 + 10; 
-  const startAngle = (activePosition - 1.5) * 30 * Math.PI / 180 - Math.PI / 2;
-  const endAngle = (activePosition + 1.5) * 30 * Math.PI / 180 - Math.PI / 2;
+  const startAngle = (-1.5) * 30 * Math.PI / 180 - Math.PI / 2;
+  const endAngle = (1.5) * 30 * Math.PI / 180 - Math.PI / 2;
   
   const startX = center + wedgeRadius * Math.cos(startAngle);
   const startY = center + wedgeRadius * Math.sin(startAngle);
@@ -45,14 +69,23 @@ export default function CircleOfFifthsVisual({ activeKey, onSelectKey }: Props) 
 
   return (
     <View style={[styles.container, { width: containerSize, height: containerSize }]}>
-      {/* Active Segment Highlight */}
-      <Svg height={containerSize} width={containerSize} style={StyleSheet.absoluteFill}>
-        <Path 
-          d={wedgePath} 
-          fill={colors.tint} 
-          opacity={isDark ? 0.25 : 0.15} 
-        />
-      </Svg>
+      {/* Active Segment Highlight (Animated Rotation) */}
+      <Animated.View style={[StyleSheet.absoluteFill, { 
+        transform: [{ 
+          rotate: rotateAnim.interpolate({
+            inputRange: [0, 360],
+            outputRange: ['0deg', '360deg']
+          }) 
+        }] 
+      }]}>
+        <Svg height={containerSize} width={containerSize} style={StyleSheet.absoluteFill}>
+          <Path 
+            d={wedgePath} 
+            fill={colors.tint} 
+            opacity={isDark ? 0.25 : 0.15} 
+          />
+        </Svg>
+      </Animated.View>
 
       {/* Decorative concentric circles */}
       <View style={[styles.decorativeRing, { 
@@ -92,7 +125,12 @@ export default function CircleOfFifthsVisual({ activeKey, onSelectKey }: Props) 
               ]}
               onPress={() => onSelectKey(item.minorKey)}
             >
-              <Text style={[styles.nodeText, styles.innerNodeText, { color: colors.textSecondary }, isMinorActive && styles.activeNodeText]}>
+              <Text style={[
+                styles.nodeText, 
+                styles.innerNodeText, 
+                { color: colors.textSecondary }, 
+                isMinorActive && { color: isDark ? colors.background : "#fff" }
+              ]}>
                 {item.minorKey}
               </Text>
             </Pressable>
@@ -107,7 +145,11 @@ export default function CircleOfFifthsVisual({ activeKey, onSelectKey }: Props) 
               ]}
               onPress={() => onSelectKey(item.majorKey)}
             >
-              <Text style={[styles.nodeText, { color: colors.text }, isMajorActive && styles.activeNodeText]}>
+              <Text style={[
+                styles.nodeText, 
+                { color: colors.text }, 
+                isMajorActive && { color: isDark ? colors.background : "#fff" }
+              ]}>
                 {item.majorKey}
               </Text>
               
@@ -172,9 +214,6 @@ const styles = StyleSheet.create({
   },
   innerNodeText: {
     fontSize: 12,
-  },
-  activeNodeText: {
-    color: "#fff",
   },
   signatureBadge: {
     position: "absolute",

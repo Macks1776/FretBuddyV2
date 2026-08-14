@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { usePatternExplorerStore } from "../store/usePatternExplorerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
@@ -11,13 +11,18 @@ import { tonalService } from "../services/tonalService";
 const NOTES_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 const NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-export default function PatternExplorer() {
+interface Props {
+  isPlaybackActive?: boolean;
+}
+
+export default function PatternExplorer({ isPlaybackActive = true }: Props) {
   const { layoutMode, activeTuningId, globalToggles, fretOverrides, toggleIndividualFret, disabledStrings } = usePatternExplorerStore();
   const { customTunings, accidentalPreference } = useSettingsStore();
   const { playNote } = useToneStore();
 
   const allTunings = [...DEFAULT_TUNINGS, ...customTunings];
   const tuning = allTunings.find(t => t.id === activeTuningId) || allTunings[0];
+  const lastPressRef = useRef({ time: 0, strIdx: -1, fretNum: -1 });
 
   const getComputedState = (strIdx: number, fretNum: number, pitchClass: string) => {
     const key = `${strIdx}-${fretNum}-${pitchClass}`;
@@ -34,10 +39,12 @@ export default function PatternExplorer() {
         fretRange={[0, 22]}
         strings={tuning.notes}
         onFretPress={(strIdx, fretNum, fretPitch) => {
-          // Play the note
-          playNote(fretPitch);
+          const now = Date.now();
+          const last = lastPressRef.current;
+          const isDoublePress = last.strIdx === strIdx && last.fretNum === fretNum && now - last.time < 350;
           
-          // Toggle the state
+          lastPressRef.current = { time: now, strIdx, fretNum };
+
           const chroma = tonalService.getChroma(fretPitch);
           if (chroma === undefined) return;
           
@@ -45,8 +52,23 @@ export default function PatternExplorer() {
           const pitchClass = accidentalPreference === "flat" ? NOTES_FLAT[chroma] : NOTES_SHARP[chroma];
           const currentState = getComputedState(strIdx, fretNum, pitchClass);
           
-          if (!currentState) {
-            toggleIndividualFret(strIdx, fretNum, pitchClass, currentState);
+          if (isDoublePress) {
+            // Remove on double press if active (no playback)
+            if (currentState) {
+              toggleIndividualFret(strIdx, fretNum, pitchClass, currentState);
+            }
+            // Reset to prevent triple-press bugs
+            lastPressRef.current = { time: 0, strIdx: -1, fretNum: -1 };
+          } else {
+            // Play the note on single tap if playback is active
+            if (isPlaybackActive) {
+              playNote(fretPitch);
+            }
+            
+            // Add on single press if not active
+            if (!currentState) {
+              toggleIndividualFret(strIdx, fretNum, pitchClass, currentState);
+            }
           }
         }}
         onFretLongPress={(strIdx, fretNum, fretPitch) => {

@@ -9,7 +9,11 @@ import Fretboard from "./fretboard/Fretboard";
 import NoteBadge from "./fretboard/NoteBadge";
 import { tonalService } from "../services/tonalService";
 
-export default function ScaleExplorer() {
+interface Props {
+  isPlaybackActive?: boolean;
+}
+
+export default function ScaleExplorer({ isPlaybackActive = true }: Props) {
   const { layoutMode, activeTuningId, showScale, showChord } = useFretboardStore();
   const { customTunings } = useSettingsStore();
   const { playNote } = useToneStore();
@@ -25,10 +29,12 @@ export default function ScaleExplorer() {
         fretRange={[0, 22]}
         strings={tuning.notes}
         onFretPress={(strIdx, fretNum, fretPitch) => {
-          const fretChroma = tonalService.getChroma(fretPitch) ?? -1;
-          const badge = fretChroma !== -1 ? getBadgeInfo(fretChroma) : null;
-          if (!showScale && !showChord || badge) {
-            playNote(fretPitch);
+          if (isPlaybackActive) {
+            const fretChroma = tonalService.getChroma(fretPitch) ?? -1;
+            const badge = fretChroma !== -1 ? getBadgeInfo(fretChroma) : null;
+            if (!showScale && !showChord || badge) {
+              playNote(fretPitch);
+            }
           }
         }}
         renderBadge={(strIdx, fretNum, fretPitch) => {

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NoteDisplayPreference, ColorPreference, Tuning, InstrumentPreference, ThemePreference, AccidentalPreference } from "../types/settings";
+import { NoteDisplayPreference, ColorPreference, Tuning, InstrumentPreference, ThemePreference, AccidentalPreference, HapticPreference, NoteDurationPreference } from "../types/settings";
 import { DEFAULT_TUNINGS } from "../utils/tunings";
 
 interface SettingsState {
@@ -10,12 +10,20 @@ interface SettingsState {
   accidentalPreference: AccidentalPreference;
   instrumentPreference: InstrumentPreference;
   themePreference: ThemePreference;
+  hapticPreference: HapticPreference;
+  noteDurationPreference: NoteDurationPreference;
   customTunings: Tuning[];
+  isLeftHanded: boolean;
+  notePlaybackEnabled: boolean;
   setNoteDisplayPreference: (pref: NoteDisplayPreference) => void;
   setColorPreference: (pref: ColorPreference) => void;
   setAccidentalPreference: (pref: AccidentalPreference) => void;
   setInstrumentPreference: (pref: InstrumentPreference) => void;
   setThemePreference: (pref: ThemePreference) => void;
+  setHapticPreference: (pref: HapticPreference) => void;
+  setNoteDurationPreference: (pref: NoteDurationPreference) => void;
+  setIsLeftHanded: (isLeftHanded: boolean) => void;
+  setNotePlaybackEnabled: (enabled: boolean) => void;
   saveCustomTuning: (tuning: Tuning) => void;
   deleteCustomTuning: (id: string) => void;
   getAlTuningOptions: () => Tuning[];
@@ -29,7 +37,11 @@ export const useSettingsStore = create<SettingsState>()(
       accidentalPreference: "sharp",
       instrumentPreference: "acoustic_guitar_nylon",
       themePreference: "system",
+      hapticPreference: "medium",
+      noteDurationPreference: "normal",
       customTunings: [],
+      isLeftHanded: false,
+      notePlaybackEnabled: true,
 
       setNoteDisplayPreference: (pref) =>
         set({ noteDisplayPreference: pref }),
@@ -45,6 +57,18 @@ export const useSettingsStore = create<SettingsState>()(
 
       setThemePreference: (pref) =>
         set({ themePreference: pref }),
+
+      setHapticPreference: (pref) =>
+        set({ hapticPreference: pref }),
+
+      setNoteDurationPreference: (pref) =>
+        set({ noteDurationPreference: pref }),
+
+      setIsLeftHanded: (isLeftHanded: boolean) =>
+        set({ isLeftHanded }),
+
+      setNotePlaybackEnabled: (enabled: boolean) =>
+        set({ notePlaybackEnabled: enabled }),
 
       saveCustomTuning: (tuning) =>
         set((state) => {

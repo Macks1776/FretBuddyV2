@@ -9,6 +9,7 @@ interface PatternExplorerState {
   fretOverrides: Record<string, boolean>; // e.g., { "0-3-C": false } (strIdx-fretNum-pitchClass)
   disabledStrings: number[]; // Array of string indices that are disabled
   triadRoot: string;
+  localPlaybackEnabled: boolean | null;
   
   setLayoutMode: (mode: LayoutMode) => void;
   setActiveTuningId: (id: string) => void;
@@ -17,6 +18,7 @@ interface PatternExplorerState {
   toggleGlobalNote: (pitchClass: string) => void;
   toggleIndividualFret: (strIdx: number, fretNum: number, pitchClass: string, currentComputedState: boolean) => void;
   toggleString: (strIdx: number) => void;
+  setLocalPlaybackEnabled: (enabled: boolean | null) => void;
   clearAll: () => void;
 }
 
@@ -27,6 +29,7 @@ export const usePatternExplorerStore = create<PatternExplorerState>((set) => ({
   fretOverrides: {},
   disabledStrings: [],
   triadRoot: "C",
+  localPlaybackEnabled: null,
 
   setLayoutMode: (mode) => set({ layoutMode: mode }),
   setActiveTuningId: (id) => set({ activeTuningId: id }),
@@ -84,6 +87,8 @@ export const usePatternExplorerStore = create<PatternExplorerState>((set) => ({
         return { disabledStrings: [...state.disabledStrings, strIdx] };
       }
     }),
+    
+  setLocalPlaybackEnabled: (enabled) => set({ localPlaybackEnabled: enabled }),
     
   clearAll: () => set({ globalToggles: {}, fretOverrides: {}, disabledStrings: [] }),
 }));

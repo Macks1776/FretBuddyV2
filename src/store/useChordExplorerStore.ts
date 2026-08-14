@@ -11,10 +11,13 @@ interface ChordExplorerState {
   dictVoicingIndex: number;
   
   fretStart: number;
+  capoFret: number;
   selectedFrets: Record<number, FretSelection>;
   activeTuningId: string;
+  localPlaybackEnabled: boolean | null;
 
   setFretStart: (fret: number) => void;
+  setCapoFret: (fret: number) => void;
   setFretSelection: (stringIndex: number, fret: FretSelection) => void;
   setAllSelections: (selections: Record<number, FretSelection>) => void;
   clearSelections: () => void;
@@ -24,6 +27,7 @@ interface ChordExplorerState {
   setDictRoot: (root: string) => void;
   setDictSuffix: (suffix: string) => void;
   setDictVoicingIndex: (index: number) => void;
+  setLocalPlaybackEnabled: (enabled: boolean | null) => void;
 }
 
 export const useChordExplorerStore = create<ChordExplorerState>((set) => ({
@@ -33,6 +37,7 @@ export const useChordExplorerStore = create<ChordExplorerState>((set) => ({
   dictVoicingIndex: 0,
 
   fretStart: 1, // Standard open chord position
+  capoFret: 0, // No capo by default
   selectedFrets: {
     0: "x",
     1: "x",
@@ -42,8 +47,10 @@ export const useChordExplorerStore = create<ChordExplorerState>((set) => ({
     5: "x",
   },
   activeTuningId: "standard-6",
+  localPlaybackEnabled: null,
 
   setFretStart: (fret) => set({ fretStart: Math.max(1, Math.min(18, fret)) }),
+  setCapoFret: (fret) => set({ capoFret: Math.max(0, Math.min(12, fret)) }),
   
   setFretSelection: (stringIndex, fret) => 
     set((state) => ({
@@ -72,4 +79,5 @@ export const useChordExplorerStore = create<ChordExplorerState>((set) => ({
   setDictRoot: (root) => set({ dictRoot: root, dictVoicingIndex: 0 }),
   setDictSuffix: (suffix) => set({ dictSuffix: suffix, dictVoicingIndex: 0 }),
   setDictVoicingIndex: (index) => set({ dictVoicingIndex: index }),
+  setLocalPlaybackEnabled: (enabled) => set({ localPlaybackEnabled: enabled }),
 }));

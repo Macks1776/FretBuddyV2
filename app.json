@@ -2,14 +2,14 @@
   "expo": {
     "name": "FretBuddy",
     "slug": "fretbuddy",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0B101E"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -20,12 +20,12 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0B101E"
       },
       "permissions": [
         "VIBRATE"
       ],
-      "package": "com.rmaxwellssteam.fretbuddy"
+      "package": "com.rmaxwells.fretbuddy"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +40,6 @@
         "projectId": "48e26383-ecf9-4ded-a1d7-d27eb9f67f20"
       }
     },
-    "owner": "rmaxwellss-team"
+    "owner": "rmaxwells"
   }
 }

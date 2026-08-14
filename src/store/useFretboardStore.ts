@@ -20,6 +20,7 @@ interface FretboardState {
   progressionSpeedMs: number;
 
   hideNonScaleChordTones: boolean;
+  localPlaybackEnabled: boolean | null;
 
   setLayoutMode: (mode: LayoutMode) => void;
   setActiveTuningId: (id: string) => void;
@@ -41,6 +42,7 @@ interface FretboardState {
   setProgressionSpeedMs: (speed: number) => void;
 
   setHideNonScaleChordTones: (hide: boolean) => void;
+  setLocalPlaybackEnabled: (enabled: boolean | null) => void;
 }
 
 export const useFretboardStore = create<FretboardState>((set) => ({
@@ -61,6 +63,7 @@ export const useFretboardStore = create<FretboardState>((set) => ({
   progressionSpeedMs: 2000,
 
   hideNonScaleChordTones: false,
+  localPlaybackEnabled: null,
 
   setLayoutMode: (mode) => set({ layoutMode: mode }),
   setActiveTuningId: (id) => set({ activeTuningId: id }),
@@ -97,4 +100,5 @@ export const useFretboardStore = create<FretboardState>((set) => ({
   setProgressionSpeedMs: (speed) => set({ progressionSpeedMs: speed }),
 
   setHideNonScaleChordTones: (hide) => set({ hideNonScaleChordTones: hide }),
+  setLocalPlaybackEnabled: (enabled) => set({ localPlaybackEnabled: enabled }),
 }));

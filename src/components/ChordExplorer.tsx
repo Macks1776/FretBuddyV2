@@ -1,47 +1,68 @@
-import React from "react";
+import React, { useRef } from "react";
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import { useChordExplorerStore } from "../store/useChordExplorerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { useToneStore } from "../store/useToneStore";
 import { DEFAULT_TUNINGS } from "../utils/tunings";
-import * as Haptics from "expo-haptics";
+import HapticService from '../services/HapticService';
 import Fretboard from "./fretboard/Fretboard";
 import NoteBadge from "./fretboard/NoteBadge";
 import { tonalService } from "../services/tonalService";
 
 interface Props {
   overrideTuningId?: string;
+  isPlaybackActive?: boolean;
 }
 
-export default function ChordExplorer({ overrideTuningId }: Props = {}) {
-  const { fretStart, selectedFrets, activeTuningId, setFretSelection } = useChordExplorerStore();
+export default function ChordExplorer({ overrideTuningId, isPlaybackActive = true }: Props = {}) {
+  const { fretStart, selectedFrets, activeTuningId, setFretSelection, capoFret } = useChordExplorerStore();
   const { customTunings, noteDisplayPreference } = useSettingsStore();
   const { playNote } = useToneStore();
+
+  const lastPressRef = useRef({ time: 0, strIdx: -1, fretNum: -1 });
+  const lastNutPressRef = useRef({ time: 0, strIdx: -1 });
 
   const allTunings = [...DEFAULT_TUNINGS, ...customTunings];
   const resolvedTuningId = overrideTuningId || activeTuningId;
   const tuning = allTunings.find(t => t.id === resolvedTuningId) || allTunings[0];
+  const strings = tuning.notes.map(note => tonalService.transpose(note, tonalService.getIntervalFromSemitones(capoFret)));
 
   return (
     <View style={styles.container}>
       <View style={styles.fretboardContainer}>
         <Fretboard
           orientation="vertical"
-          fretRange={[fretStart, fretStart + 4]}
-          strings={tuning.notes}
+          fretRange={[fretStart, fretStart + 3]}
+          strings={strings}
+          isCapoActive={capoFret > 0}
           renderNutControl={(strIdx) => {
             const selection = selectedFrets[strIdx];
             return (
               <Pressable 
                 style={styles.nutBtn}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  if (selection === "x") {
-                    setFretSelection(strIdx, 0);
-                    playNote(tuning.notes[strIdx]);
-                  } else {
+                  const now = Date.now();
+                  const isDoubleTap = now - lastNutPressRef.current.time < 350 && lastNutPressRef.current.strIdx === strIdx;
+                  lastNutPressRef.current = { time: now, strIdx };
+
+                  if (isDoubleTap) {
+                    HapticService.heavy();
                     setFretSelection(strIdx, "x");
+                    lastNutPressRef.current = { time: 0, strIdx: -1 };
+                  } else {
+                    HapticService.medium();
+                    if (selection === "x") {
+                      setFretSelection(strIdx, 0);
+                    }
+                    if (isPlaybackActive) {
+                      playNote(strings[strIdx]);
+                    }
                   }
+                }}
+                onLongPress={() => {
+                  HapticService.heavy();
+                  setFretSelection(strIdx, "x");
+                  lastNutPressRef.current = { time: 0, strIdx: -1 };
                 }}
               >
                 <Text style={[
@@ -55,15 +76,29 @@ export default function ChordExplorer({ overrideTuningId }: Props = {}) {
             );
           }}
           onFretPress={(strIdx, fretNum, fretPitch) => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            const isSelected = selectedFrets[strIdx] === fretNum;
-            if (!isSelected) {
-              setFretSelection(strIdx, fretNum);
+            const now = Date.now();
+            const isDoubleTap = now - lastPressRef.current.time < 350 && 
+                                lastPressRef.current.strIdx === strIdx && 
+                                lastPressRef.current.fretNum === fretNum;
+            lastPressRef.current = { time: now, strIdx, fretNum };
+
+            if (isDoubleTap) {
+              HapticService.heavy();
+              setFretSelection(strIdx, 0);
+              lastPressRef.current = { time: 0, strIdx: -1, fretNum: -1 };
+            } else {
+              HapticService.medium();
+              const isSelected = selectedFrets[strIdx] === fretNum;
+              if (!isSelected) {
+                setFretSelection(strIdx, fretNum);
+              }
+              if (isPlaybackActive) {
+                playNote(fretPitch);
+              }
             }
-            playNote(fretPitch);
           }}
           onFretLongPress={(strIdx, fretNum, fretPitch) => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            HapticService.heavy();
             const isSelected = selectedFrets[strIdx] === fretNum;
             if (isSelected) {
               setFretSelection(strIdx, 0); // Unselect to open string

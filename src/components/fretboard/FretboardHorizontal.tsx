@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { tonalService } from '../../services/tonalService';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import type { FretboardProps } from './Fretboard';
 
 const FRET_MARKERS = [3, 5, 7, 9, 15, 17, 19, 21];
@@ -12,8 +13,10 @@ export default function FretboardHorizontal({
   renderBadge,
   onFretPress,
   onFretLongPress,
-  renderNutControl
+  renderNutControl,
+  isCapoActive
 }: FretboardProps) {
+  const { isLeftHanded } = useSettingsStore();
   const [startFret, endFret] = fretRange;
   const fretsArray = Array.from({ length: endFret - startFret + 1 }, (_, i) => startFret + i);
   const strings = [...tuningNotes].reverse(); // High E on top
@@ -29,7 +32,7 @@ export default function FretboardHorizontal({
             const originalStrIdx = tuningNotes.length - 1 - strIdx;
             
             return (
-              <View key={`str-${strIdx}`} style={styles.stringRow}>
+              <View key={`str-${strIdx}`} style={[styles.stringRow, isLeftHanded && { flexDirection: 'row-reverse' }]}>
                 {renderNutControl && (
                   <View style={styles.nutControlCell}>
                     {renderNutControl(originalStrIdx)}
@@ -43,8 +46,16 @@ export default function FretboardHorizontal({
                   const fretPitch = tonalService.transpose(openNote, tonalService.getIntervalFromSemitones(fretNum));
 
                   return (
-                    <View key={`fret-${strIdx}-${fretNum}`} style={[styles.fretCell, fretNum === 0 && styles.nutCell]}>
-                      {(fretNum > 0 || (!isFirstInViewport && fretNum > 0)) && <View style={styles.fretWire} />}
+                    <View 
+                      key={`fret-${strIdx}-${fretNum}`} 
+                      style={[
+                        styles.fretCell, 
+                        fretNum === 0 && styles.nutCell,
+                        fretNum === 0 && isCapoActive && styles.capoNutCell,
+                        fretNum === 0 && isLeftHanded && { borderRightWidth: 0, borderLeftWidth: 4, borderLeftColor: isCapoActive ? "#a4b0be" : "#ecf0f1" }
+                      ]}
+                    >
+                      {(fretNum > 0 || (!isFirstInViewport && fretNum > 0)) && <View style={[styles.fretWire, isLeftHanded && { right: undefined, left: 0 }]} />}
 
                       {/* Markers */}
                       {strIdx === 2 && FRET_MARKERS.includes(fretNum) && (
@@ -69,7 +80,7 @@ export default function FretboardHorizontal({
             );
           })}
 
-          <View style={styles.horizontalLabelRow}>
+          <View style={[styles.horizontalLabelRow, isLeftHanded && { flexDirection: 'row-reverse' }]}>
             {renderNutControl && <View style={styles.nutControlCell} />}
             {fretsArray.map((fretNum) => (
               <View key={`label-${fretNum}`} style={styles.fretCell}>
@@ -88,7 +99,7 @@ export default function FretboardHorizontal({
 const styles = StyleSheet.create({
   horizontalWrapper: {
     height: 250,
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "transparent",
   },
   fretboardContainer: {
     flexDirection: "column",
@@ -112,7 +123,7 @@ const styles = StyleSheet.create({
     width: 40,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f2f5", // match wrapper to appear outside fretboard
+    backgroundColor: "transparent", // match wrapper to appear outside fretboard
     zIndex: 4, // above strings
   },
   fretCell: {
@@ -125,6 +136,10 @@ const styles = StyleSheet.create({
     width: 40,
     borderRightWidth: 4,
     borderRightColor: "#ecf0f1", // Bone nut
+  },
+  capoNutCell: {
+    borderRightColor: "#a4b0be", // Silver capo
+    borderRightWidth: 8,
   },
   fretWire: {
     position: "absolute",
