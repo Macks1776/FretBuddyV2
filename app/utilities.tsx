@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Link, Stack } from "expo-router";
 import { useTheme } from "../src/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
-import { ArrowRightLeft, Timer } from "lucide-react-native";
+import { ArrowRightLeft, Timer, Drum } from "lucide-react-native";
 import AnimatedPressable from "../src/components/ui/AnimatedPressable";
 import GlassCard from "../src/components/ui/GlassCard";
 
@@ -20,6 +20,13 @@ const tools = [
     href: "/metronome",
     icon: Timer,
     colors: ["#3B82F6", "#00E5FF"] as const,
+  },
+  {
+    title: "Drum Machine",
+    subtitle: "808-style pads & sequencer",
+    href: "/drum-machine",
+    icon: Drum,
+    colors: ["#F43F5E", "#A855F7"] as const,
   },
 ];
 

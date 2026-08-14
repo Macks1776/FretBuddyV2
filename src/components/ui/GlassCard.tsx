@@ -1,15 +1,15 @@
 import React from 'react';
-import { StyleSheet, ViewStyle, StyleProp, View } from 'react-native';
+import { StyleSheet, ViewStyle, StyleProp, View, ViewProps } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '../../hooks/useTheme';
 
-interface Props {
+interface Props extends ViewProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   intensity?: number;
 }
 
-export default function GlassCard({ children, style, intensity = 50 }: Props) {
+export default function GlassCard({ children, style, intensity = 50, ...rest }: Props) {
   const { colors, isDark } = useTheme();
 
   return (
@@ -24,6 +24,7 @@ export default function GlassCard({ children, style, intensity = 50 }: Props) {
         },
         style
       ]}
+      {...rest}
     >
       {children}
     </BlurView>

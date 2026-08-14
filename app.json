@@ -3,9 +3,10 @@
     "name": "FretBuddy",
     "slug": "fretbuddy",
     "version": "2.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0B101E",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
