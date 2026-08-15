@@ -9,17 +9,18 @@ import { DEFAULT_TUNINGS } from "../src/utils/tunings";
 import { useTheme } from "../src/hooks/useTheme";
 import { ThemeColors } from "../src/theme/colors";
 import { tonalService } from "../src/services/tonalService";
+import LabelWithTooltip from "../src/components/ui/LabelWithTooltip";
 
 const NOTES_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 const NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-const SimplePicker = ({ label, value, options, onSelect, colors }: { label: string, value: string, options: {label: string, value: string}[], onSelect: (v: string) => void, colors: ThemeColors }) => {
+const SimplePicker = ({ label, value, options, onSelect, colors, tooltip, tooltipTitle }: { label: string, value: string, options: {label: string, value: string}[], onSelect: (v: string) => void, colors: ThemeColors, tooltip?: string, tooltipTitle?: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedLabel = options.find(o => o.value === value)?.label || value;
   
   return (
     <View style={styles.pickerWrapper}>
-      <Text style={[styles.pickerLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <LabelWithTooltip label={label} tooltip={tooltip} tooltipTitle={tooltipTitle} />
       <Pressable style={[styles.pickerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => { HapticService.medium(); setIsOpen(true); }}>
         <Text style={[styles.pickerBtnText, { color: colors.text }]}>{selectedLabel} ▾</Text>
       </Pressable>
@@ -99,7 +100,9 @@ export default function PatternExplorerScreen() {
         
         {/* Layout Toggle */}
         <View style={styles.controlRow}>
-          <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Fretboard Mode</Text>
+          <LabelWithTooltip 
+            label="Fretboard Mode" 
+          />
           <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
             <Pressable 
               style={[styles.segmentBtn, layoutMode === "horizontal" && [styles.segmentBtnActive, { backgroundColor: colors.card }]]}
@@ -125,6 +128,7 @@ export default function PatternExplorerScreen() {
         <View style={styles.controlRow}>
           <SimplePicker 
             label="Tuning"
+            tooltip="Select the tuning for the instrument to update the fretboard notes."
             value={activeTuningId}
             options={allTunings.map(t => ({ label: t.name, value: t.id }))}
             onSelect={setActiveTuningId}
@@ -134,7 +138,9 @@ export default function PatternExplorerScreen() {
 
         <View style={styles.controlRow}>
           <View style={styles.toggleRow}>
-            <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Note Playback</Text>
+            <LabelWithTooltip 
+              label="Note Playback" 
+            />
             <Switch 
               value={isPlaybackActive} 
               onValueChange={(v) => { HapticService.medium(); setLocalPlaybackEnabled(v); }}
@@ -146,7 +152,7 @@ export default function PatternExplorerScreen() {
         {/* Note Toggles Grid */}
         <View style={styles.controlRow}>
           <View style={styles.headerRow}>
-             <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Toggle Notes</Text>
+             <LabelWithTooltip label="Toggle Notes" />
              <Pressable onPress={() => { HapticService.medium(); clearAll(); }}>
                <Text style={[styles.clearBtnText, { color: colors.danger }]}>Clear All</Text>
              </Pressable>
@@ -183,13 +189,12 @@ export default function PatternExplorerScreen() {
 
         {/* Triad Toggles */}
         <View style={styles.controlRow}>
-          <Pressable 
-            style={styles.headerRow}
-            onPress={() => setIsTriadsExpanded(!isTriadsExpanded)}
-          >
-             <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Chord Triads</Text>
-             <Text style={{ color: colors.textSecondary, fontWeight: "bold" }}>{isTriadsExpanded ? "▲" : "▼"}</Text>
-          </Pressable>
+          <View style={styles.headerRow}>
+             <LabelWithTooltip label="Chord Triads" tooltip="Quickly highlight all notes belonging to a specific chord triad." />
+             <Pressable onPress={() => setIsTriadsExpanded(!isTriadsExpanded)} hitSlop={10}>
+               <Text style={{ color: colors.textSecondary, fontWeight: "bold", paddingHorizontal: 8 }}>{isTriadsExpanded ? "▲" : "▼"}</Text>
+             </Pressable>
+          </View>
           
           {isTriadsExpanded && (
             <View style={styles.triadContainer}>
@@ -226,13 +231,12 @@ export default function PatternExplorerScreen() {
         
         {/* String Toggles */}
         <View style={styles.controlRow}>
-          <Pressable 
-            style={styles.headerRow}
-            onPress={() => setIsStringsExpanded(!isStringsExpanded)}
-          >
-             <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Visible Strings</Text>
-             <Text style={{ color: colors.textSecondary, fontWeight: "bold" }}>{isStringsExpanded ? "▲" : "▼"}</Text>
-          </Pressable>
+          <View style={styles.headerRow}>
+             <LabelWithTooltip label="Visible Strings" />
+             <Pressable onPress={() => setIsStringsExpanded(!isStringsExpanded)} hitSlop={10}>
+               <Text style={{ color: colors.textSecondary, fontWeight: "bold", paddingHorizontal: 8 }}>{isStringsExpanded ? "▲" : "▼"}</Text>
+             </Pressable>
+          </View>
           
           {isStringsExpanded && (
             <View style={styles.stringGrid}>

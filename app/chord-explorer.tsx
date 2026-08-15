@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Chord, Note, Interval } from "@tonaljs/tonal";
@@ -12,6 +12,10 @@ import * as Haptics from "expo-haptics";
 
 // @ts-ignore - no types available for this json
 import guitarDb from "@tombatossals/chords-db/lib/guitar.json";
+
+const COMMON_CHORD_SUFFIXES = [
+  "major", "minor", "7", "maj7", "m7", "m7b5", "dim", "aug", "sus2", "sus4", "6", "m6", "9", "m9", "maj9"
+];
 
 export default function ChordExplorerScreen() {
   const { 
@@ -63,6 +67,19 @@ export default function ChordExplorerScreen() {
       setTimeout(() => playNote(pitch), index * 40);
     });
   };
+
+  const prevPitchesRef = useRef(activePitches.join(","));
+  useEffect(() => {
+    const currentStr = activePitches.join(",");
+    if (currentStr !== prevPitchesRef.current) {
+      if (explorerMode === "dictionary" && isPlaybackActive) {
+        activePitches.forEach((pitch, index) => {
+          setTimeout(() => playNote(pitch), index * 40);
+        });
+      }
+      prevPitchesRef.current = currentStr;
+    }
+  }, [activePitches, explorerMode, isPlaybackActive, playNote]);
 
   const handleShiftFret = (direction: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -180,7 +197,7 @@ export default function ChordExplorerScreen() {
             <View style={styles.pickerCol}>
               <Text style={[styles.pickerLabel, { color: colors.textSecondary }]}>Chord Type</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillScroll}>
-                {guitarDb.suffixes.map((s: string) => (
+                {COMMON_CHORD_SUFFIXES.map((s: string) => (
                   <Pressable 
                     key={s}
                     style={[styles.pill, { backgroundColor: colors.surface, borderColor: colors.border }, dictSuffix === s && [styles.pillActive, { backgroundColor: colors.tint, borderColor: colors.tint }]]}

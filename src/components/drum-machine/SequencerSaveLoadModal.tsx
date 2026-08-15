@@ -5,6 +5,7 @@ import { useDrumMachineStore } from '../../store/useDrumMachineStore';
 import { X, Save, FolderOpen } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GlassCard from '../ui/GlassCard';
+import LabelWithTooltip from '../ui/LabelWithTooltip';
 
 interface Props {
   visible: boolean;
@@ -103,6 +104,11 @@ export default function SequencerSaveLoadModal({ visible, onClose }: Props) {
 
           {mode === 'save' ? (
             <View style={styles.content}>
+              <LabelWithTooltip 
+                label="Sequence Name" 
+                tooltip="Enter a unique name to save your current sequencer pattern so you can load it later." 
+                tooltipTitle="Save Sequence" 
+              />
               <TextInput 
                 style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                 placeholder="Sequence Name"

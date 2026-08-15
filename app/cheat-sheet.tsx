@@ -7,39 +7,48 @@ export default function CheatSheetScreen() {
   const [activeTab, setActiveTab] = useState<"scales" | "chords" | "progressions" | "circleOfFifths">("scales");
   const { colors, isDark } = useTheme();
 
-  const renderBadgeRow = (label: string, items: string[], isSteps: boolean = false) => (
-    <View style={styles.badgeSection}>
-      <Text style={[styles.badgeLabel, { color: colors.textSecondary }]}>{label}</Text>
-      <View style={styles.badgeRow}>
-        {items.map((item, idx) => (
-          <React.Fragment key={idx}>
-            <View style={[
-              styles.badge, 
-              isSteps 
-                ? [styles.badgeStep, { backgroundColor: isDark ? "#1a2c4e" : "#e8f0fe", borderColor: isDark ? "#2a4270" : "#d2e3fc" }] 
-                : [styles.badgeFormula, { backgroundColor: isDark ? "#2a1c3d" : "#f3e8fd", borderColor: isDark ? "#432a60" : "#ebd4fc" }]
-            ]}>
-              <Text style={[styles.badgeText, isSteps ? [styles.badgeStepText, { color: isDark ? "#8ab4f8" : "#1967d2" }] : [styles.badgeFormulaText, { color: isDark ? "#c58af9" : "#7e3ff2" }]]}>
-                {item}
-              </Text>
-            </View>
-            {/* Render a small connecting line between steps if it's W/H notation */}
-            {isSteps && idx < items.length - 1 && (
-              <View style={[styles.badgeConnector, { backgroundColor: isDark ? "#2a4270" : "#d2e3fc" }]} />
-            )}
-          </React.Fragment>
-        ))}
+  const renderBadgeRow = (label: string, items: string[], isSteps: boolean = false, alignment: "flex-start" | "center" | "space-between" = "flex-start") => {
+    const primaryColor = isSteps ? colors.tint : (isDark ? "#A855F7" : "#8B5CF6"); // Cyan for steps, Purple for formula
+    const bgColor = isDark ? `${primaryColor}20` : `${primaryColor}15`;
+    
+    return (
+      <View style={styles.badgeSection}>
+        <Text style={[styles.badgeLabel, { color: colors.textSecondary, textAlign: alignment === "center" ? "center" : "left" }]}>{label}</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={[
+            styles.badgeRow,
+            { minWidth: "100%", justifyContent: alignment, gap: alignment === "center" ? 16 : 4 }
+          ]}
+        >
+          {items.map((item, idx) => (
+            <React.Fragment key={idx}>
+              <View style={[
+                styles.badge, 
+                { backgroundColor: bgColor, borderColor: primaryColor, borderWidth: 1 }
+              ]}>
+                <Text style={[styles.badgeText, { color: primaryColor }]}>
+                  {item}
+                </Text>
+              </View>
+              {isSteps && idx < items.length - 1 && (
+                <View style={[styles.badgeConnector, { backgroundColor: primaryColor, opacity: 0.4 }]} />
+              )}
+            </React.Fragment>
+          ))}
+        </ScrollView>
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderScaleCard = (scale: TheoryScale) => (
     <View key={scale.id} style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.text }]}>
       <Text style={[styles.cardTitle, { color: colors.text }]}>{scale.name}</Text>
       <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{scale.description}</Text>
       <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
-      {renderBadgeRow("Interval Steps (Whole/Half)", scale.steps, true)}
-      {renderBadgeRow("Scale Formula", scale.formula)}
+      {renderBadgeRow("Interval Steps (Whole/Half)", scale.steps, true, "flex-start")}
+      {renderBadgeRow("Scale Formula", scale.formula, false, "space-between")}
     </View>
   );
 
@@ -48,7 +57,7 @@ export default function CheatSheetScreen() {
       <Text style={[styles.cardTitle, { color: colors.text }]}>{chord.name}</Text>
       <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{chord.description}</Text>
       <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
-      {renderBadgeRow("Chord Formula", chord.formula)}
+      {renderBadgeRow("Chord Formula", chord.formula, false, "center")}
     </View>
   );
 
@@ -60,7 +69,7 @@ export default function CheatSheetScreen() {
       
       <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
       
-      {renderBadgeRow("Progression", prog.chords, true)}
+      {renderBadgeRow("Progression", prog.chords, true, "flex-start")}
       
       <View style={{ marginTop: 12 }}>
         <Text style={[styles.badgeLabel, { color: colors.textSecondary }]}>Popular Examples</Text>
@@ -228,9 +237,9 @@ const styles = StyleSheet.create({
   },
   badgeRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
     alignItems: "center",
-    gap: 4, // for wrapped rows if they get too long
+    gap: 4, 
+    paddingVertical: 2, 
   },
   badge: {
     paddingHorizontal: 12,

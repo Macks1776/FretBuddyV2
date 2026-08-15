@@ -19,6 +19,7 @@ import { DEFAULT_TUNINGS } from "../src/utils/tunings";
 import { SCALES, CHORDS } from "../src/utils/theoryData";
 import { useTheme } from "../src/hooks/useTheme";
 import { ThemeColors } from "../src/theme/colors";
+import LabelWithTooltip from "../src/components/ui/LabelWithTooltip";
 
 const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
@@ -29,21 +30,23 @@ const SimplePicker = ({
 	options,
 	onSelect,
 	colors,
+	tooltip,
+	tooltipTitle,
 }: {
 	label: string;
 	value: string;
 	options: { label: string; value: string }[];
 	onSelect: (v: string) => void;
 	colors: ThemeColors;
+	tooltip?: string;
+	tooltipTitle?: string;
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const selectedLabel = options.find((o) => o.value === value)?.label || value;
 
 	return (
 		<View style={styles.pickerWrapper}>
-			<Text style={[styles.pickerLabel, { color: colors.textSecondary }]}>
-				{label}
-			</Text>
+			<LabelWithTooltip label={label} tooltip={tooltip} tooltipTitle={tooltipTitle} />
 			<Pressable
 				style={[
 					styles.pickerBtn,
@@ -184,9 +187,9 @@ export default function FretboardScreen() {
 			<View style={styles.menuContent}>
 				{/* Layout Toggle */}
 				<View style={styles.controlRow}>
-					<Text style={[styles.controlLabel, { color: colors.textSecondary }]}>
-						Fretboard Mode
-					</Text>
+					<LabelWithTooltip
+						label="Fretboard Mode"
+					/>
 					<View
 						style={[
 							styles.segmentedControl,
@@ -251,6 +254,7 @@ export default function FretboardScreen() {
 				<View style={styles.controlRow}>
 					<SimplePicker
 						label="Tuning"
+						tooltip="Select the tuning for the instrument to update the fretboard notes."
 						value={activeTuningId}
 						options={allTunings.map((t) => ({ label: t.name, value: t.id }))}
 						onSelect={setActiveTuningId}
@@ -259,7 +263,9 @@ export default function FretboardScreen() {
 				</View>
 
                 <View style={styles.toggleRow}>
-                    <Text style={[styles.controlLabel, { color: colors.text }]}>Note Playback</Text>
+                    <LabelWithTooltip 
+                        label="Note Playback" 
+                    />
                     <Switch 
                         value={isPlaybackActive} 
                         onValueChange={(v) => { HapticService.medium(); setLocalPlaybackEnabled(v); }}
@@ -269,9 +275,9 @@ export default function FretboardScreen() {
 
 				{/* Scale Toggle & Controls */}
 				<View style={styles.toggleRow}>
-					<Text style={[styles.controlLabel, { color: colors.text }]}>
-						Show Scale Notes
-					</Text>
+					<LabelWithTooltip
+						label="Show Scale Notes"
+					/>
 					<Switch
 						value={showScale}
 						onValueChange={(v) => {
@@ -307,9 +313,9 @@ export default function FretboardScreen() {
 
 				{/* Chord Toggle & Controls */}
 				<View style={styles.toggleRow}>
-					<Text style={[styles.controlLabel, { color: colors.text }]}>
-						Show Chord Tones
-					</Text>
+					<LabelWithTooltip
+						label="Show Chord Tones"
+					/>
 					<Switch
 						value={showChord}
 						onValueChange={(v) => {
@@ -328,11 +334,10 @@ export default function FretboardScreen() {
 						]}
 					>
 						<View style={styles.toggleRow}>
-							<Text
-								style={[styles.controlLabel, { color: colors.textSecondary }]}
-							>
-								Diatonic Only
-							</Text>
+							<LabelWithTooltip
+								label="Diatonic Only"
+								tooltip="Hide chord tones that do not belong to the currently selected scale."
+							/>
 							<Switch
 								value={hideNonScaleChordTones}
 								onValueChange={(v) => {

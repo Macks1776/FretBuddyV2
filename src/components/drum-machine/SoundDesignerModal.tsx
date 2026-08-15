@@ -26,6 +26,7 @@ import {
 import Slider from "@react-native-community/slider";
 import DropdownPicker from "../ui/DropdownPicker";
 import HapticService from "../../services/HapticService";
+import LabelWithTooltip from "../ui/LabelWithTooltip";
 
 interface Props {
 	visible: boolean;
@@ -90,16 +91,6 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 	const [masterDecay, setMasterDecay] = useState(0.4);
 
 	const [preset, setPreset] = useState("kick");
-
-	const [activeTooltip, setActiveTooltip] = useState<{
-		title: string;
-		message: string;
-	} | null>(null);
-
-	const handleShowTooltip = (title: string, message: string) => {
-		HapticService.light();
-		setActiveTooltip({ title, message });
-	};
 
 	const handleLoadPreset = (val: string) => {
 		HapticService.light();
@@ -179,13 +170,12 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 						style={styles.content}
 						showsVerticalScrollIndicator={false}
 					>
-						<Text style={[styles.label, { color: colors.textSecondary }]}>
-							Load Preset
-						</Text>
 						<DropdownPicker
 							selectedValue={preset}
 							onValueChange={handleLoadPreset}
-							label="Select Preset"
+							label="Load Preset"
+							tooltip="Select a built-in drum sound as a starting point."
+							tooltipTitle="Load Preset"
 							options={Object.keys(BUILT_IN_SOUNDS).map((k) => ({
 								label: k.replace("_", " ").toUpperCase(),
 								value: k,
@@ -193,15 +183,12 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 						/>
 
 						<CollapsibleSection title="Tone Generator" defaultOpen={true}>
-							<LabelWithTooltip
-								label="Waveform"
-								tooltip="The fundamental shape of the sound. Sine is smooth and deep (good for kicks). Square and Sawtooth are harsh and buzzy. Triangle is in between."
-								onShowTooltip={handleShowTooltip}
-							/>
 							<DropdownPicker
 								selectedValue={oscWaveform}
 								onValueChange={(val: any) => setOscWaveform(val)}
 								label="Waveform"
+								tooltip="The fundamental shape of the sound. Sine is smooth and deep (good for kicks). Square and Sawtooth are harsh and buzzy. Triangle is in between."
+								tooltipTitle="Waveform"
 								options={[
 									{ label: "Sine", value: "sine" },
 									{ label: "Square", value: "square" },
@@ -218,7 +205,6 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 								max={2000}
 								tooltip="The frequency the sound starts at. Higher values give more 'punch' or 'click'."
 								tooltipTitle="Start Pitch"
-								onShowTooltip={handleShowTooltip}
 							/>
 							<SliderRow
 								label={`End Pitch (${Math.round(pitchEnd)} Hz)`}
@@ -228,7 +214,6 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 								max={2000}
 								tooltip="The frequency the sound drops down to. Lower values give more sub-bass body."
 								tooltipTitle="End Pitch"
-								onShowTooltip={handleShowTooltip}
 							/>
 							<SliderRow
 								label={`Pitch Decay (${pitchDecay.toFixed(2)} s)`}
@@ -238,7 +223,6 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 								max={1.0}
 								tooltip="How quickly the pitch drops from Start to End. Faster decay creates a sharper hit."
 								tooltipTitle="Pitch Decay"
-								onShowTooltip={handleShowTooltip}
 							/>
 							<SliderRow
 								label={`Tone Volume (${Math.round(toneVolume * 100)}%)`}
@@ -248,20 +232,16 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 								max={1.0}
 								tooltip="The overall loudness of the Tone Generator."
 								tooltipTitle="Tone Volume"
-								onShowTooltip={handleShowTooltip}
 							/>
 						</CollapsibleSection>
 
 						<CollapsibleSection title="Noise Generator">
-							<LabelWithTooltip
-								label="Filter Type"
-								tooltip="How the white noise is shaped. Lowpass cuts high frequencies, Highpass cuts low frequencies, Bandpass leaves only a narrow frequency band."
-								onShowTooltip={handleShowTooltip}
-							/>
 							<DropdownPicker
 								selectedValue={noiseFilterType}
 								onValueChange={(val: any) => setNoiseFilterType(val)}
 								label="Filter Type"
+								tooltip="How the white noise is shaped. Lowpass cuts high frequencies, Highpass cuts low frequencies, Bandpass leaves only a narrow frequency band."
+								tooltipTitle="Filter Type"
 								options={[
 									{ label: "Lowpass", value: "lowpass" },
 									{ label: "Highpass", value: "highpass" },
@@ -277,7 +257,6 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 								max={10000}
 								tooltip="The target frequency for the noise filter. Higher values make the noise brighter and thinner."
 								tooltipTitle="Filter Freq"
-								onShowTooltip={handleShowTooltip}
 							/>
 							<SliderRow
 								label={`Noise Decay (${noiseDecay.toFixed(2)} s)`}
@@ -287,7 +266,6 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 								max={1.0}
 								tooltip="How quickly the noise fades out. Short decay is good for clicks, long decay is good for cymbals/hats."
 								tooltipTitle="Noise Decay"
-								onShowTooltip={handleShowTooltip}
 							/>
 							<SliderRow
 								label={`Noise Volume (${Math.round(noiseVolume * 100)}%)`}
@@ -297,7 +275,6 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 								max={1.0}
 								tooltip="The overall loudness of the Noise Generator."
 								tooltipTitle="Noise Volume"
-								onShowTooltip={handleShowTooltip}
 							/>
 						</CollapsibleSection>
 
@@ -310,7 +287,6 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 								max={2.0}
 								tooltip="The final fade-out of the entire sound. This acts as a maximum length constraint."
 								tooltipTitle="Master Decay"
-								onShowTooltip={handleShowTooltip}
 							/>
 						</CollapsibleSection>
 
@@ -318,6 +294,11 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 					</ScrollView>
 
 					<View style={[styles.footer, { borderTopColor: colors.border }]}>
+						<LabelWithTooltip
+							label="Sound Name"
+							tooltip="Give your custom sound a unique name to identify it in the drum pad selector."
+							tooltipTitle="Sound Name"
+						/>
 						<TextInput
 							style={[
 								styles.input,
@@ -378,71 +359,9 @@ export default function SoundDesignerModal({ visible, onClose }: Props) {
 					</View>
 				</View>
 			</View>
-
-			{activeTooltip && (
-				<Modal visible={true} transparent animationType="fade">
-					<Pressable
-						style={styles.tooltipOverlay}
-						onPress={() => setActiveTooltip(null)}
-					>
-						<Pressable
-							style={[
-								styles.tooltipContainer,
-								{ backgroundColor: colors.surface, borderColor: colors.border },
-							]}
-						>
-							<View style={styles.tooltipHeader}>
-								<Text style={[styles.tooltipTitle, { color: colors.text }]}>
-									{activeTooltip.title}
-								</Text>
-								<Pressable onPress={() => setActiveTooltip(null)}>
-									<X color={colors.textSecondary} size={20} />
-								</Pressable>
-							</View>
-							<Text
-								style={[styles.tooltipMessage, { color: colors.textSecondary }]}
-							>
-								{activeTooltip.message}
-							</Text>
-						</Pressable>
-					</Pressable>
-				</Modal>
-			)}
 		</Modal>
 	);
 }
-
-const LabelWithTooltip = ({
-	label,
-	tooltip,
-	tooltipTitle,
-	onShowTooltip,
-}: {
-	label: string;
-	tooltip?: string;
-	tooltipTitle?: string;
-	onShowTooltip?: (title: string, msg: string) => void;
-}) => {
-	const { colors } = useTheme();
-	return (
-		<View style={styles.labelContainer}>
-			<Text
-				style={[styles.label, { color: colors.textSecondary, marginBottom: 0 }]}
-			>
-				{label}
-			</Text>
-			{tooltip && onShowTooltip && (
-				<Pressable
-					onPress={() => onShowTooltip(tooltipTitle || label, tooltip)}
-					hitSlop={10}
-					style={{ marginLeft: 6 }}
-				>
-					<Info color={colors.textSecondary} size={16} />
-				</Pressable>
-			)}
-		</View>
-	);
-};
 
 const SliderRow = ({
 	label,
@@ -452,7 +371,6 @@ const SliderRow = ({
 	max,
 	tooltip,
 	tooltipTitle,
-	onShowTooltip,
 }: any) => {
 	const { colors } = useTheme();
 	return (
@@ -461,7 +379,6 @@ const SliderRow = ({
 				label={label}
 				tooltip={tooltip}
 				tooltipTitle={tooltipTitle}
-				onShowTooltip={onShowTooltip}
 			/>
 			<Slider
 				style={{ width: "100%", height: 40 }}
@@ -572,32 +489,5 @@ const styles = StyleSheet.create({
 	},
 	sectionContent: {
 		padding: 16,
-	},
-	tooltipOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(0,0,0,0.5)",
-		justifyContent: "center",
-		alignItems: "center",
-		padding: 24,
-	},
-	tooltipContainer: {
-		width: "100%",
-		borderRadius: 16,
-		borderWidth: 1,
-		padding: 24,
-	},
-	tooltipHeader: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: 16,
-	},
-	tooltipTitle: {
-		fontSize: 18,
-		fontWeight: "700",
-	},
-	tooltipMessage: {
-		fontSize: 16,
-		lineHeight: 24,
 	},
 });

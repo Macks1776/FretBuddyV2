@@ -6,6 +6,7 @@ import { Tuning, NoteDisplayPreference, ColorPreference, InstrumentPreference, T
 import { useTheme } from "../src/hooks/useTheme";
 import HapticService from "../src/services/HapticService";
 import { Ionicons } from "@expo/vector-icons";
+import LabelWithTooltip from "../src/components/ui/LabelWithTooltip";
 
 type Accidental = "flat" | "natural" | "sharp";
 
@@ -165,7 +166,9 @@ export default function SettingsScreen() {
           </View>
         </View>
         
-        <Text style={[styles.label, { color: colors.textSecondary }]}>App Theme</Text>
+        <LabelWithTooltip
+          label="App Theme"
+        />
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           {(["system", "light", "dark"] as ThemePreference[]).map((pref) => (
             <Pressable
@@ -187,7 +190,13 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Haptic Feedback</Text>
+        <View style={{ marginTop: 16 }}>
+          <LabelWithTooltip
+            label="Haptic Feedback"
+            tooltip="Adjust the strength of vibrations when interacting with UI elements and fretboard."
+            tooltipTitle="Haptic Feedback"
+          />
+        </View>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           {(["off", "light", "medium", "heavy"] as HapticPreference[]).map((pref) => (
             <Pressable
@@ -214,7 +223,11 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Orientation</Text>
+        <View style={{ marginTop: 16 }}>
+          <LabelWithTooltip
+            label="Orientation"
+          />
+        </View>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           <Pressable
             style={[
@@ -258,7 +271,9 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Note Notation</Text>
+        <LabelWithTooltip
+          label="Note Notation"
+        />
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           {(["letter", "interval", "both"] as NoteDisplayPreference[]).map((pref) => (
             <Pressable
@@ -280,7 +295,13 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Accidentals</Text>
+        <View style={{ marginTop: 16 }}>
+          <LabelWithTooltip
+            label="Accidentals"
+            tooltip="Choose whether to display sharp (♯) or flat (♭) symbols for non-natural notes."
+            tooltipTitle="Accidentals"
+          />
+        </View>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           {(["sharp", "flat"] as AccidentalPreference[]).map((pref) => (
             <Pressable
@@ -302,7 +323,13 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { marginTop: 16, color: colors.textSecondary }]}>Color Coding</Text>
+        <View style={{ marginTop: 16 }}>
+          <LabelWithTooltip
+            label="Color Coding"
+            tooltip="Choose how notes are colored. Interval colors change based on the selected scale/chord root. Static colors are always the same for each note."
+            tooltipTitle="Color Coding"
+          />
+        </View>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           {(["interval", "static"] as ColorPreference[]).map((pref) => (
             <Pressable
@@ -335,7 +362,9 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.toggleRow}>
-          <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 0 }]}>Fretboard Note Playback</Text>
+          <LabelWithTooltip
+            label="Fretboard Note Playback"
+          />
           <Switch 
             value={notePlaybackEnabled}
             onValueChange={setNotePlaybackEnabled}
@@ -343,7 +372,11 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <Text style={[styles.label, { marginTop: 16, color: colors.textSecondary }]}>Playback Instrument</Text>
+        <View style={{ marginTop: 16 }}>
+          <LabelWithTooltip
+            label="Playback Instrument"
+          />
+        </View>
         <CustomDropdown 
           title="Select Instrument"
           valueLabel={
@@ -363,7 +396,13 @@ export default function SettingsScreen() {
           onSelect={(val) => setInstrumentPreference(val as InstrumentPreference)}
         />
 
-        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Note Ring Duration</Text>
+        <View style={{ marginTop: 16 }}>
+          <LabelWithTooltip
+            label="Note Ring Duration"
+            tooltip="Adjust how long a note continues to sound after being tapped."
+            tooltipTitle="Note Ring Duration"
+          />
+        </View>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           {(["extra_short", "short", "normal", "long", "extra_long"] as NoteDurationPreference[]).map((pref) => {
             const labelMap: Record<string, string> = {
@@ -444,7 +483,11 @@ export default function SettingsScreen() {
             </View>
 
             <ScrollView style={styles.modalScroll}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Tuning Name</Text>
+              <LabelWithTooltip
+                label="Tuning Name"
+                tooltip="Give your custom tuning a memorable name."
+                tooltipTitle="Tuning Name"
+              />
               <TextInput
                 style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                 value={newTuningName}
@@ -453,7 +496,13 @@ export default function SettingsScreen() {
                 placeholderTextColor={colors.textMuted}
               />
 
-              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Strings (Highest to Lowest Pitch)</Text>
+              <View style={{ marginTop: 16 }}>
+                <LabelWithTooltip
+                  label="Strings (Highest to Lowest Pitch)"
+                  tooltip="Define the tuning for each string. String 1 is the thinnest string (highest pitch)."
+                  tooltipTitle="Strings Configuration"
+                />
+              </View>
               
               <View style={styles.stringsContainer}>
                 {[...newTuningNotes].reverse().map((noteObj, revIdx) => {

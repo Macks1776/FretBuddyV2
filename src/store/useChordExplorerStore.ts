@@ -54,6 +54,7 @@ export const useChordExplorerStore = create<ChordExplorerState>((set) => ({
   
   setFretSelection: (stringIndex, fret) => 
     set((state) => ({
+      explorerMode: "reverse",
       selectedFrets: {
         ...state.selectedFrets,
         [stringIndex]: fret

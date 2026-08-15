@@ -31,7 +31,7 @@ export const SCALES: TheoryScale[] = [
     formula: ["1", "2", "3", "4", "5", "6", "7"]
   },
   {
-    id: "natural_minor",
+    id: "aeolian",
     name: "Natural Minor (Aeolian)",
     description: "The relative minor of the major scale. Sounds sad or serious.",
     steps: ["W", "H", "W", "W", "H", "W", "W"],
@@ -140,12 +140,12 @@ export const CHORDS: TheoryChord[] = [
 
 export const PROGRESSIONS: TheoryProgression[] = [
   {
-    id: "pop-punk",
-    name: "The Pop Punk / Epic",
+    id: "four-chord",
+    name: "The Four-Chord Progression",
     chords: ["I", "V", "vi", "IV"],
-    vibe: "Pop, Rock, Anthemic",
+    vibe: "Universal, Foundational",
     description: "The most common chord progression in Western popular music. It starts stable, creates tension, moves to a minor emotional chord, and resolves beautifully back home.",
-    examples: ["Let It Be (The Beatles)", "Don't Stop Believin' (Journey)", "With Or Without You (U2)"]
+    examples: ["Let It Be (The Beatles, 1970)", "Don't Stop Believin' (Journey, 1981)", "I'm Yours (Jason Mraz, 2008)"]
   },
   {
     id: "50s-doo-wop",
@@ -153,7 +153,7 @@ export const PROGRESSIONS: TheoryProgression[] = [
     chords: ["I", "vi", "IV", "V"],
     vibe: "Nostalgic, Romantic",
     description: "Extremely popular in the 1950s and 60s. The movement to the minor vi chord creates a romantic, nostalgic feel before climbing back up to the dominant V.",
-    examples: ["Stand By Me (Ben E. King)", "Earth Angel (The Penguins)", "Every Breath You Take (The Police)"]
+    examples: ["Earth Angel (Connie Francis, 1959)", "Every Breath You Take (The Police, 1983)", "Perfect (Ed Sheeran, 2017)"]
   },
   {
     id: "blues-12-bar",
@@ -161,7 +161,7 @@ export const PROGRESSIONS: TheoryProgression[] = [
     chords: ["I", "IV", "V"],
     vibe: "Blues, Rock & Roll, Roots",
     description: "The foundation of blues and early rock. It traditionally uses dominant 7th chords for all three chords, creating constant tension and a driving feel. Structured over 12 bars.",
-    examples: ["Johnny B. Goode (Chuck Berry)", "Pride and Joy (Stevie Ray Vaughan)", "Hound Dog (Elvis Presley)"]
+    examples: ["Johnny B. Goode (Chuck Berry, 1958)", "Pride and Joy (Stevie Ray Vaughan, 1983)", "Give Me One Reason (Tracy Chapman, 1995)"]
   },
   {
     id: "jazz-ii-v-i",
@@ -169,22 +169,22 @@ export const PROGRESSIONS: TheoryProgression[] = [
     chords: ["ii", "V", "I"],
     vibe: "Jazzy, Sophisticated, Smooth",
     description: "The most important progression in jazz. It provides a strong, smooth resolution to the tonic (I). Usually played with 7th chords (ii7 - V7 - Imaj7).",
-    examples: ["Autumn Leaves", "Fly Me To The Moon (Frank Sinatra)", "Sunday Morning (Maroon 5)"]
+    examples: ["Fly Me To The Moon (Frank Sinatra, 1964)", "Just the Way You Are (Billy Joel, 1977)", "Sunday Morning (Maroon 5, 2004)"]
   },
   {
     id: "descending-flamenco",
     name: "Andalusian Cadence",
-    chords: ["vi", "V", "IV", "III"],
+    chords: ["i", "VII", "VI", "V"],
     vibe: "Flamenco, Dramatic, Exotic",
-    description: "A descending progression very common in Flamenco and Spanish music. The final major III chord creates a strong, dramatic tension pulling back to the minor vi.",
-    examples: ["Sultans of Swing (Dire Straits)", "Hit The Road Jack (Ray Charles)", "Runaway (Del Shannon)"]
+    description: "A descending progression very common in Flamenco and Spanish music. The final major V chord creates a strong, dramatic tension pulling back to the minor i.",
+    examples: ["Hit The Road Jack (Ray Charles, 1961)", "Sultans of Swing (Dire Straits, 1978)", "Smooth (Santana, 1999)"]
   },
   {
-    id: "creepy-minor",
-    name: "The Creepy Minor",
+    id: "epic-minor",
+    name: "The Epic Minor",
     chords: ["i", "VI", "III", "VII"],
     vibe: "Moody, Epic, Modern Pop",
     description: "A very common minor key progression used in modern pop and rock. It sounds moody, driving, and slightly dark.",
-    examples: ["Radioactive (Imagine Dragons)", "Boulevard of Broken Dreams (Green Day)", "Snow (Red Hot Chili Peppers)"]
+    examples: ["The Passenger (Iggy Pop, 1977)", "Africa - Chorus (Toto, 1982)", "Zombie (The Cranberries, 1994)"]
   }
 ];

@@ -3,7 +3,7 @@ import { ThemeProvider, DarkTheme, DefaultTheme } from "@react-navigation/native
 import ToneService from "../src/services/ToneService";
 import { useTheme } from "../src/hooks/useTheme";
 import { StatusBar, View } from "react-native";
-
+import { TooltipProvider } from "../src/providers/TooltipProvider";
 export default function Layout() {
   const { isDark, colors } = useTheme();
 
@@ -17,10 +17,11 @@ export default function Layout() {
 
   return (
     <ThemeProvider value={customTheme}>
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-        <ToneService />
-        <Stack
+      <TooltipProvider>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+          <ToneService />
+          <Stack
           screenOptions={{
             headerStyle: { backgroundColor: colors.card },
             headerTintColor: colors.text,
@@ -38,6 +39,7 @@ export default function Layout() {
           <Stack.Screen name="settings" options={{ title: "Settings" }} />
         </Stack>
       </View>
+      </TooltipProvider>
     </ThemeProvider>
   );
 }
