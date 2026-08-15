@@ -165,7 +165,7 @@ export default function SequencerView() {
           </Pressable>
           <Pressable 
             onPress={handleTapTempo}
-            style={[styles.bpmBtn, { backgroundColor: colors.primary, width: 48, marginLeft: 4 }]}
+            style={[styles.bpmBtn, { backgroundColor: colors.tint, width: 48, marginLeft: 4 }]}
           >
             <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 12 }}>TAP</Text>
           </Pressable>
@@ -175,7 +175,7 @@ export default function SequencerView() {
             <Settings2 color={colors.textSecondary} size={20} />
           </Pressable>
           <Pressable onPress={toggleOrientation} style={styles.iconBtn}>
-            <Smartphone color={isLandscape ? colors.primary : colors.textSecondary} size={20} />
+            <Smartphone color={isLandscape ? colors.tint : colors.textSecondary} size={20} />
           </Pressable>
           <Pressable onPress={() => setModalVisible(true)} style={styles.iconBtn}>
             <Save color={colors.textSecondary} size={20} />
@@ -196,8 +196,8 @@ export default function SequencerView() {
                   style={[
                     styles.sequenceBlock,
                     { 
-                      backgroundColor: isPlayingThisBlock ? colors.primary : colors.surface,
-                      borderColor: isPlayingThisBlock ? colors.primary : colors.border,
+                      backgroundColor: isPlayingThisBlock ? colors.tint : colors.surface,
+                      borderColor: isPlayingThisBlock ? colors.tint : colors.border,
                       borderWidth: 1,
                     }
                   ]}
@@ -228,10 +228,10 @@ export default function SequencerView() {
               {parts.map(p => (
                 <Pressable
                   key={p.id}
-                  style={[styles.sequenceBlock, { backgroundColor: `${colors.primary}20`, marginRight: 8, borderColor: colors.primary, borderWidth: 1, borderStyle: 'dashed' }]}
+                  style={[styles.sequenceBlock, { backgroundColor: `${colors.tint}20`, marginRight: 8, borderColor: colors.tint, borderWidth: 1, borderStyle: 'dashed' }]}
                   onPress={() => handleAddToSequence(p.id)}
                 >
-                  <Text style={[styles.sequenceBlockText, { color: colors.primary }]}>+ {p.name}</Text>
+                  <Text style={[styles.sequenceBlockText, { color: colors.tint }]}>+ {p.name}</Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -354,7 +354,7 @@ export default function SequencerView() {
                  }}
                  style={[styles.iconBtn, { paddingHorizontal: 8, backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.border }]}
                >
-                 <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '700' }}>1/{activePart.resolution || 16}</Text>
+                 <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700' }}>1/{activePart.resolution || 16}</Text>
                </Pressable>
             </View>
           </View>
@@ -457,13 +457,13 @@ export default function SequencerView() {
         {/* Playback Mode Toggle */}
         <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 20, padding: 4 }}>
           <Pressable 
-            style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16, backgroundColor: playbackMode === 'part' ? colors.primary : 'transparent' }}
+            style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16, backgroundColor: playbackMode === 'part' ? colors.tint : 'transparent' }}
             onPress={() => { HapticService.light(); setPlaybackMode('part'); }}
           >
             <Text style={{ fontWeight: '700', fontSize: 12, color: playbackMode === 'part' ? '#FFF' : colors.textMuted }}>PART</Text>
           </Pressable>
           <Pressable 
-            style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16, backgroundColor: playbackMode === 'song' ? colors.primary : 'transparent' }}
+            style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16, backgroundColor: playbackMode === 'song' ? colors.tint : 'transparent' }}
             onPress={() => { HapticService.light(); setPlaybackMode('song'); }}
           >
             <Text style={{ fontWeight: '700', fontSize: 12, color: playbackMode === 'song' ? '#FFF' : colors.textMuted }}>SONG</Text>

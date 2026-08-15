@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type CustomSound = {
+  base?: string; // The base sound this custom sound was created from
   // Tone Layer
   oscWaveform: 'sine' | 'square' | 'sawtooth' | 'triangle';
   pitchStart: number;
