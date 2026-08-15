@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { tonalService } from '../../services/tonalService';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import type { FretboardProps } from './Fretboard';
@@ -35,7 +36,12 @@ export default function FretboardVertical({
       )}
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.fretboardVerticalContainer}>
+        <LinearGradient 
+          colors={['#2c1e16', '#4a3525', '#2c1e16']} 
+          start={{ x: 0, y: 0 }} 
+          end={{ x: 1, y: 0 }}
+          style={styles.fretboardVerticalContainer}
+        >
           {fretsArray.map((fretNum, index) => {
             const isFirstInViewport = index === 0;
             // Original vertical fretboard used borderBottom for the nut if fretNum === 0
@@ -53,17 +59,13 @@ export default function FretboardVertical({
                 ]}
               >
                 {/* Fret wire */}
-                {fretNum > 0 && <View style={styles.vFretWire} />}
-                
-                {/* Fret Markers */}
-                {FRET_MARKERS.includes(fretNum) && (
-                  <View style={styles.vMarkerDot} />
-                )}
-                {DOUBLE_MARKERS.includes(fretNum) && (
-                  <>
-                    <View style={[styles.vMarkerDot, { left: "30%" }]} />
-                    <View style={[styles.vMarkerDot, { left: "70%" }]} />
-                  </>
+                {fretNum > 0 && (
+                  <LinearGradient 
+                    colors={['#546e7a', '#90a4ae', '#546e7a']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.vFretWire} 
+                  />
                 )}
 
                 {/* Vertical Fret Label */}
@@ -82,7 +84,20 @@ export default function FretboardVertical({
                     return (
                       <View key={`v-str-${strIdx}-${fretNum}`} style={styles.vFretCell}>
                         {/* String Line */}
-                        <View style={[styles.vStringLine, { width: thickness }]} />
+                        <LinearGradient
+                          colors={['#78909c', '#cfd8dc', '#78909c']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.vStringLine, { width: thickness, transform: [{ translateX: -thickness / 2 }] }]}
+                        />
+                        
+                        {/* Markers */}
+                        {strIdx === 2 && FRET_MARKERS.includes(fretNum) && (
+                          <LinearGradient colors={['#ffffff', '#e0e0e0', '#9e9e9e']} style={[styles.vMarkerDot, { left: isLeftHanded ? "0%" : "100%" }]} />
+                        )}
+                        {(strIdx === 1 || strIdx === 4) && DOUBLE_MARKERS.includes(fretNum) && (
+                          <LinearGradient colors={['#ffffff', '#e0e0e0', '#9e9e9e']} style={styles.vMarkerDot} />
+                        )}
                         
                         {/* Playable Note */}
                         <Pressable 
@@ -100,7 +115,7 @@ export default function FretboardVertical({
               </View>
             );
           })}
-        </View>
+        </LinearGradient>
       </ScrollView>
     </View>
   );
@@ -125,7 +140,6 @@ const styles = StyleSheet.create({
   },
   fretboardVerticalContainer: {
     flexDirection: "column",
-    backgroundColor: "#4a3525",
     paddingBottom: 40,
     borderRadius: 8,
     overflow: "hidden",
@@ -149,9 +163,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 2,
-    backgroundColor: "#a4b0be",
+    height: 3,
     zIndex: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 1,
+    elevation: 2,
   },
   vMarkerDot: {
     position: "absolute",
@@ -160,11 +178,9 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#dfe4ea",
     marginLeft: -10,
-    marginTop: -10,
+    marginTop: -11.5,
     zIndex: 0,
-    opacity: 0.8,
   },
   vFretLabelText: {
     position: "absolute",
@@ -192,9 +208,12 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: "50%",
-    marginLeft: -1,
-    backgroundColor: "#d1d8e0",
     zIndex: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 3,
   },
   vTouchArea: {
     width: "100%",

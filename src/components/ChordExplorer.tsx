@@ -117,7 +117,6 @@ export default function ChordExplorer({ overrideTuningId, isPlaybackActive = tru
                 borderWidth={0}
                 textColor="#fff"
                 label={fretPC}
-                size={28}
               />
             );
           }}
