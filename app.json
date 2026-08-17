@@ -3,7 +3,7 @@
     "name": "FretBuddy",
     "slug": "fretbuddy",
     "version": "2.2.1",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0B101E",

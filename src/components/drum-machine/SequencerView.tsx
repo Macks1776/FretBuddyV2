@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, DeviceEventEmitter, ScrollView, TextInput, Alert, Modal } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useDrumMachineStore } from '../../store/useDrumMachineStore';
-import { Play, Square, Minus, Plus, Save, PlusCircle, X, Copy, Trash2, Eraser, Smartphone, Settings2 } from 'lucide-react-native';
+import { Play, Square, Minus, Plus, Save, PlusCircle, X, Copy, Trash2, Eraser, Settings2 } from 'lucide-react-native';
 import HapticService from '../../services/HapticService';
 import { LinearGradient } from 'expo-linear-gradient';
 import SequencerSaveLoadModal from './SequencerSaveLoadModal';
 import SoundDesignerModal from './SoundDesignerModal';
 import SoundSelectorModal from './SoundSelectorModal';
 import VelocityEditorModal from './VelocityEditorModal';
-import * as ScreenOrientation from 'expo-screen-orientation';
+
 
 const STEP_WIDTH = 40;
 const STEP_HEIGHT = 40;
@@ -31,7 +31,7 @@ export default function SequencerView() {
   const [selectedTrackIndex, setSelectedTrackIndex] = useState<number | null>(null);
   const [editingStep, setEditingStep] = useState<{trackIdx: number, stepIdx: number, velocity: number} | null>(null);
   const [tapTimes, setTapTimes] = useState<number[]>([]);
-  const [isLandscape, setIsLandscape] = useState(false);
+
   const [confirmModal, setConfirmModal] = useState<{title: string, message: string, confirmText: string, onConfirm: () => void} | null>(null);
 
   const activePart = parts.find(p => p.id === activePartId) || parts[0];
@@ -136,16 +136,7 @@ export default function SequencerView() {
     }
   };
 
-  const toggleOrientation = async () => {
-    HapticService.light();
-    if (isLandscape) {
-      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      setIsLandscape(false);
-    } else {
-      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-      setIsLandscape(true);
-    }
-  };
+
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, padding: 24, paddingBottom: 60 }} showsVerticalScrollIndicator={true}>
@@ -174,9 +165,7 @@ export default function SequencerView() {
           <Pressable onPress={() => { HapticService.light(); setDesignerVisible(true); }} style={styles.iconBtn}>
             <Settings2 color={colors.textSecondary} size={20} />
           </Pressable>
-          <Pressable onPress={toggleOrientation} style={styles.iconBtn}>
-            <Smartphone color={isLandscape ? colors.tint : colors.textSecondary} size={20} />
-          </Pressable>
+
           <Pressable onPress={() => setModalVisible(true)} style={styles.iconBtn}>
             <Save color={colors.textSecondary} size={20} />
           </Pressable>

@@ -7,6 +7,7 @@ import { DEFAULT_TUNINGS } from "../utils/tunings";
 import { useFretboardTheoryData } from "../hooks/useFretboardTheoryData";
 import Fretboard from "./fretboard/Fretboard";
 import NoteBadge from "./fretboard/NoteBadge";
+import { useOrientation } from "../hooks/useOrientation";
 import { tonalService } from "../services/tonalService";
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 
 export default function ScaleExplorer({ isPlaybackActive = true }: Props) {
   const { layoutMode, activeTuningId, showScale, showChord } = useFretboardStore();
+  const orientation = useOrientation();
   const { customTunings } = useSettingsStore();
   const { playNote } = useToneStore();
   const { getBadgeInfo } = useFretboardTheoryData();
@@ -25,7 +27,7 @@ export default function ScaleExplorer({ isPlaybackActive = true }: Props) {
   return (
     <View style={styles.container}>
       <Fretboard
-        orientation={layoutMode === 'fullscreen' ? 'vertical' : 'horizontal'}
+        orientation={layoutMode === 'fullscreen' && orientation === 'portrait' ? 'vertical' : 'horizontal'}
         fretRange={[0, 22]}
         strings={tuning.notes}
         onFretPress={(strIdx, fretNum, fretPitch) => {

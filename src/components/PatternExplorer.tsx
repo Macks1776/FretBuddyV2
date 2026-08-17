@@ -7,6 +7,7 @@ import { DEFAULT_TUNINGS } from "../utils/tunings";
 import Fretboard from "./fretboard/Fretboard";
 import NoteBadge from "./fretboard/NoteBadge";
 import { tonalService } from "../services/tonalService";
+import { useOrientation } from "../hooks/useOrientation";
 
 const NOTES_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 const NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -17,6 +18,7 @@ interface Props {
 
 export default function PatternExplorer({ isPlaybackActive = true }: Props) {
   const { layoutMode, activeTuningId, globalToggles, fretOverrides, toggleIndividualFret, disabledStrings } = usePatternExplorerStore();
+  const orientation = useOrientation();
   const { customTunings, accidentalPreference } = useSettingsStore();
   const { playNote } = useToneStore();
 
@@ -35,7 +37,7 @@ export default function PatternExplorer({ isPlaybackActive = true }: Props) {
   return (
     <View style={styles.container}>
       <Fretboard
-        orientation={layoutMode === 'fullscreen' ? 'vertical' : 'horizontal'}
+        orientation={layoutMode === 'fullscreen' && orientation === 'portrait' ? 'vertical' : 'horizontal'}
         fretRange={[0, 22]}
         strings={tuning.notes}
         onFretPress={(strIdx, fretNum, fretPitch) => {

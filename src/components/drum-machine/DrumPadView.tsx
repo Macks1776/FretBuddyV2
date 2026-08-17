@@ -12,8 +12,8 @@ import { useTheme } from "../../hooks/useTheme";
 import { useDrumMachineStore } from "../../store/useDrumMachineStore";
 import GlassCard from "../ui/GlassCard";
 import HapticService from "../../services/HapticService";
-import { Smartphone, Edit3, Sliders, Grid } from "lucide-react-native";
-import * as ScreenOrientation from "expo-screen-orientation";
+import { Edit3, Sliders, Grid } from "lucide-react-native";
+
 import { Pressable } from "react-native";
 import SoundDesignerModal from "./SoundDesignerModal";
 import SoundSelectorModal from "./SoundSelectorModal";
@@ -32,7 +32,7 @@ export default function DrumPadView() {
 		loadStateFromStorage,
 		updatePadAssignment,
 	} = useDrumMachineStore();
-	const [isLandscape, setIsLandscape] = useState(false);
+
 	const [editMode, setEditMode] = useState(false);
 	const [designerVisible, setDesignerVisible] = useState(false);
 	const [selectorVisible, setSelectorVisible] = useState(false);
@@ -121,20 +121,7 @@ export default function DrumPadView() {
 
 	// Pad width/height are calculated above before handlePadPress
 
-	const toggleOrientation = async () => {
-		HapticService.light();
-		if (isLandscape) {
-			await ScreenOrientation.lockAsync(
-				ScreenOrientation.OrientationLock.PORTRAIT_UP,
-			);
-			setIsLandscape(false);
-		} else {
-			await ScreenOrientation.lockAsync(
-				ScreenOrientation.OrientationLock.LANDSCAPE,
-			);
-			setIsLandscape(true);
-		}
-	};
+
 
 	return (
 		<View style={styles.container}>
@@ -176,13 +163,7 @@ export default function DrumPadView() {
 						<Text style={[styles.controlText, { color: editMode ? "#FFF" : colors.text }]}>Assign</Text>
 					</Pressable>
 
-					<Pressable
-						onPress={toggleOrientation}
-						style={[styles.controlBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-					>
-						<Smartphone color={isLandscape ? colors.tint : colors.textSecondary} size={16} />
-						<Text style={[styles.controlText, { color: colors.text }]}>Rotate</Text>
-					</Pressable>
+
 				</ScrollView>
 			</View>
 

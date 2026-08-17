@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Switch, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Chord, Note, Interval } from "@tonaljs/tonal";
 import { useChordExplorerStore, FretSelection } from "../src/store/useChordExplorerStore";
@@ -8,6 +8,7 @@ import { useToneStore } from "../src/store/useToneStore";
 import { DEFAULT_TUNINGS } from "../src/utils/tunings";
 import ChordExplorer from "../src/components/ChordExplorer";
 import { useTheme } from "../src/hooks/useTheme";
+import { useOrientation } from "../src/hooks/useOrientation";
 import * as Haptics from "expo-haptics";
 
 // @ts-ignore - no types available for this json
@@ -33,6 +34,8 @@ export default function ChordExplorerScreen() {
   const { customTunings, notePlaybackEnabled } = useSettingsStore();
   const { playNote } = useToneStore();
   const { colors } = useTheme();
+  const orientation = useOrientation();
+  const isLandscape = orientation === 'landscape';
 
   // Dictionary logic: force standard tuning in Dictionary mode
   const resolvedTuningId = explorerMode === "dictionary" ? "standard-6" : activeTuningId;
@@ -139,9 +142,11 @@ export default function ChordExplorerScreen() {
   }, [explorerMode, dictRoot, dictSuffix, dictVoicingIndex, chordOptions]);
 
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
-      
+  const controls = (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={isLandscape ? styles.controlsScrollLandscape : styles.controlsScrollPortrait}
+    >
       <View style={styles.modeToggleContainer}>
         <View style={[styles.segmentedControl, { backgroundColor: colors.segmentedBg }]}>
           <Pressable 
@@ -261,27 +266,20 @@ export default function ChordExplorerScreen() {
           </View>
           
           <View style={{ flexDirection: "row", gap: 12, marginTop: 16 }}>
-            {/* Capo Stepper */}
             <View style={[styles.stepperContainer, { backgroundColor: colors.surface, flex: 1, marginTop: 0 }]}>
               <Pressable style={styles.stepperBtn} onPress={() => setCapoFret(capoFret - 1)}>
                 <Text style={[styles.stepperIcon, { color: colors.text }]}>◀</Text>
               </Pressable>
-              <Text style={[styles.stepperText, { color: colors.text }]}>
-                Capo {capoFret}
-              </Text>
+              <Text style={[styles.stepperText, { color: colors.text }]}>Capo {capoFret}</Text>
               <Pressable style={styles.stepperBtn} onPress={() => setCapoFret(capoFret + 1)}>
                 <Text style={[styles.stepperIcon, { color: colors.text }]}>▶</Text>
               </Pressable>
             </View>
-
-            {/* Fret Stepper */}
             <View style={[styles.stepperContainer, { backgroundColor: colors.surface, flex: 1, marginTop: 0 }]}>
               <Pressable style={styles.stepperBtn} onPress={() => handleShiftFret(-1)}>
                 <Text style={[styles.stepperIcon, { color: colors.text }]}>◀</Text>
               </Pressable>
-              <Text style={[styles.stepperText, { color: colors.text }]}>
-                Fret {fretStart}
-              </Text>
+              <Text style={[styles.stepperText, { color: colors.text }]}>Fret {fretStart}</Text>
               <Pressable style={styles.stepperBtn} onPress={() => handleShiftFret(1)}>
                 <Text style={[styles.stepperIcon, { color: colors.text }]}>▶</Text>
               </Pressable>
@@ -289,10 +287,28 @@ export default function ChordExplorerScreen() {
           </View>
         </View>
       )}
+    </ScrollView>
+  );
 
-      <View style={styles.fretboardWrapper}>
-        <ChordExplorer overrideTuningId={resolvedTuningId} isPlaybackActive={isPlaybackActive} />
-      </View>
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
+      {isLandscape ? (
+        <View style={styles.landscapeLayout}>
+          <View style={[styles.landscapeControls, { borderRightColor: colors.border }]}>
+            {controls}
+          </View>
+          <View style={styles.fretboardWrapper}>
+            <ChordExplorer overrideTuningId={resolvedTuningId} isPlaybackActive={isPlaybackActive} />
+          </View>
+        </View>
+      ) : (
+        <>
+          {controls}
+          <View style={styles.fretboardWrapper}>
+            <ChordExplorer overrideTuningId={resolvedTuningId} isPlaybackActive={isPlaybackActive} />
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -300,6 +316,21 @@ export default function ChordExplorerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  // Landscape side-by-side layout
+  landscapeLayout: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  landscapeControls: {
+    width: 280,
+    borderRightWidth: 1,
+  },
+  controlsScrollPortrait: {
+    // no extra styles needed for portrait
+  },
+  controlsScrollLandscape: {
+    flexGrow: 1,
   },
   modeToggleContainer: {
     padding: 16,
