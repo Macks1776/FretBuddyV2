@@ -8,21 +8,21 @@ import GlassCard from "../src/components/ui/GlassCard";
 
 const tools = [
   {
-    title: "Scale Explorer",
+    title: "Scales",
     subtitle: "Find your path across the fretboard",
     href: "/scale-explorer",
     icon: LayoutGrid,
     colors: ["#00E5FF", "#A855F7"] as const,
   },
   {
-    title: "Chord Explorer",
+    title: "Chords",
     subtitle: "Build and discover new voicings",
     href: "/chord-explorer",
     icon: Music,
     colors: ["#D946EF", "#00E5FF"] as const,
   },
   {
-    title: "Pattern Explorer",
+    title: "Fretboard",
     subtitle: "Highlight notes and triads",
     href: "/pattern-explorer",
     icon: Activity,
