@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Modal, Switch } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Modal, Switch, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import HapticService from '../src/services/HapticService';
 import PatternExplorer from "../src/components/PatternExplorer";
@@ -56,11 +56,54 @@ const SimplePicker = ({ label, value, options, onSelect, colors, tooltip, toolti
   );
 };
 
+const ChordResultItem = ({ chord, colors }: { chord: string, colors: ThemeColors }) => {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <Pressable style={{ backgroundColor: colors.surface, padding: 12, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: colors.border }} onPress={() => setExpanded(!expanded)}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={{ color: colors.tint, fontSize: 16, fontWeight: 'bold' }}>{chord}</Text>
+        <MaterialCommunityIcons name={expanded ? "chevron-up" : "chevron-down"} size={20} color={colors.textSecondary} />
+      </View>
+      {expanded && (
+        <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
+          <Text style={{ color: colors.text, fontSize: 14 }}>Notes: <Text style={{ color: colors.textSecondary }}>{tonalService.getChordNotes(chord).join(', ')}</Text></Text>
+          <Text style={{ color: colors.text, fontSize: 14, marginTop: 4 }}>Intervals: <Text style={{ color: colors.textSecondary }}>{tonalService.getChordIntervals(chord).join(', ')}</Text></Text>
+        </View>
+      )}
+    </Pressable>
+  );
+};
+
+const ScaleResultItem = ({ scaleMatch, colors }: { scaleMatch: any, colors: ThemeColors }) => {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <Pressable style={{ backgroundColor: colors.surface, padding: 12, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: colors.border }} onPress={() => setExpanded(!expanded)}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={{ color: colors.tint, fontSize: 16, fontWeight: 'bold' }}>{scaleMatch.scale}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{Math.round(scaleMatch.percentage)}% Match</Text>
+          <MaterialCommunityIcons name={expanded ? "chevron-up" : "chevron-down"} size={20} color={colors.textSecondary} />
+        </View>
+      </View>
+      <Text style={{ color: colors.textSecondary, fontSize: 14, marginTop: 4 }}>
+        Contains {scaleMatch.matchCount} of {scaleMatch.totalNotes} selected notes ({scaleMatch.scaleLength} notes total)
+      </Text>
+      {expanded && scaleMatch.notes && scaleMatch.intervals && (
+        <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
+          <Text style={{ color: colors.text, fontSize: 14 }}>Notes: <Text style={{ color: colors.textSecondary }}>{scaleMatch.notes.join(', ')}</Text></Text>
+          <Text style={{ color: colors.text, fontSize: 14, marginTop: 4 }}>Intervals: <Text style={{ color: colors.textSecondary }}>{scaleMatch.intervals.join(', ')}</Text></Text>
+        </View>
+      )}
+    </Pressable>
+  );
+};
+
 export default function PatternExplorerScreen() {
   const {
     layoutMode,
     activeTuningId,
     globalToggles,
+    fretOverrides,
     disabledStrings,
     triadRoot,
     setLayoutMode,
@@ -81,6 +124,11 @@ export default function PatternExplorerScreen() {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [isStringsExpanded, setIsStringsExpanded] = useState(false);
   const [isTriadsExpanded, setIsTriadsExpanded] = useState(false);
+  const [isIdentifyModalOpen, setIsIdentifyModalOpen] = useState(false);
+  const [identifiedNotes, setIdentifiedNotes] = useState<string[]>([]);
+  const [selectedRoot, setSelectedRoot] = useState<string>("");
+  const [isChordsExpanded, setIsChordsExpanded] = useState(false);
+  const [isScalesExpanded, setIsScalesExpanded] = useState(true);
 
   const allTunings = [...DEFAULT_TUNINGS, ...customTunings];
   const tuning = allTunings.find(t => t.id === activeTuningId) || allTunings[0];
@@ -97,6 +145,68 @@ export default function PatternExplorerScreen() {
       return accidentalPreference === "flat" ? NOTES_FLAT[chroma] : NOTES_SHARP[chroma];
     });
     applyTriad(normalizedNotes);
+  };
+
+  const handleIdentify = () => {
+    HapticService.medium();
+    
+    const noteCounts: Record<string, number> = {};
+
+    for (let strIdx = 0; strIdx < tuning.notes.length; strIdx++) {
+      if (disabledStrings.includes(strIdx)) continue;
+      
+      const stringPitch = tuning.notes[strIdx];
+      
+      for (let fretNum = 0; fretNum <= 22; fretNum++) {
+        const fretPitch = tonalService.transpose(stringPitch, tonalService.getIntervalFromSemitones(fretNum));
+        const chroma = tonalService.getChroma(fretPitch);
+        if (chroma === undefined) continue;
+        
+        const pitchClass = accidentalPreference === "flat" ? NOTES_FLAT[chroma] : NOTES_SHARP[chroma];
+        
+        const key = `${strIdx}-${fretNum}-${pitchClass}`;
+        const isActive = fretOverrides[key] !== undefined ? fretOverrides[key] : !!globalToggles[pitchClass];
+        
+        if (isActive) {
+          noteCounts[pitchClass] = (noteCounts[pitchClass] || 0) + 1;
+        }
+      }
+    }
+    
+    const uniqueNotes = Object.keys(noteCounts);
+    if (uniqueNotes.length < 2) {
+      Alert.alert(
+        "Select Notes",
+        "Please select at least 2 distinct notes on the fretboard to identify patterns."
+      );
+      return;
+    }
+    
+    let maxCount = 0;
+    let defaultRoot = uniqueNotes[0];
+    uniqueNotes.forEach(note => {
+      if (noteCounts[note] > maxCount) {
+        maxCount = noteCounts[note];
+        defaultRoot = note;
+      }
+    });
+
+    const reorderedNotes = [defaultRoot, ...uniqueNotes.filter(n => n !== defaultRoot)];
+    const initialChords = tonalService.detectChords(reorderedNotes);
+    const hasExactChord = initialChords.length > 0;
+    const noteCount = uniqueNotes.length;
+
+    if ((noteCount >= 2 && noteCount <= 3) || hasExactChord) {
+      setIsChordsExpanded(true);
+      setIsScalesExpanded(false);
+    } else {
+      setIsChordsExpanded(false);
+      setIsScalesExpanded(true);
+    }
+
+    setIdentifiedNotes(uniqueNotes);
+    setSelectedRoot(defaultRoot);
+    setIsIdentifyModalOpen(true);
   };
 
   const renderMenuControls = () => (
@@ -145,9 +255,14 @@ export default function PatternExplorerScreen() {
         <View style={styles.controlRow}>
           <View style={styles.headerRow}>
              <LabelWithTooltip label="Toggle Notes" />
-             <Pressable onPress={() => { HapticService.medium(); clearAll(); }}>
-               <Text style={[styles.clearBtnText, { color: colors.danger }]}>Clear All</Text>
-             </Pressable>
+             <View style={{ flexDirection: 'row', gap: 12 }}>
+               <Pressable onPress={handleIdentify}>
+                 <Text style={[styles.clearBtnText, { color: colors.tint }]}>Identify</Text>
+               </Pressable>
+               <Pressable onPress={() => { HapticService.medium(); clearAll(); }}>
+                 <Text style={[styles.clearBtnText, { color: colors.danger }]}>Clear All</Text>
+               </Pressable>
+             </View>
           </View>
           
           <View style={styles.noteGrid}>
@@ -265,6 +380,103 @@ export default function PatternExplorerScreen() {
     </ScrollView>
   );
 
+  const renderIdentifyModal = () => {
+    if (!isIdentifyModalOpen) return null;
+    const reorderedNotes = selectedRoot ? [selectedRoot, ...identifiedNotes.filter(n => n !== selectedRoot)] : identifiedNotes;
+    const detectedChords = tonalService.detectChords(reorderedNotes);
+    const detectedScales = tonalService.getCloseScales(identifiedNotes, selectedRoot);
+    
+    const commonScales = detectedScales.filter((s: any) => s.isCommon);
+    const otherScales = detectedScales.filter((s: any) => !s.isCommon);
+
+    return (
+      <Modal visible={isIdentifyModalOpen} transparent animationType="slide">
+        <Pressable style={styles.modalOverlay} onPress={() => setIsIdentifyModalOpen(false)}>
+          <Pressable style={[styles.modalContent, { backgroundColor: colors.card, borderTopColor: colors.border, borderTopWidth: 1, height: '80%' }]} onPress={e => e.stopPropagation()}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16 }}>
+              <Text style={[styles.modalTitle, { color: colors.text, marginBottom: 0 }]}>Identify Notes</Text>
+              <Pressable onPress={() => setIsIdentifyModalOpen(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+
+            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ color: colors.textSecondary, marginBottom: 8 }}>Selected Notes:</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {identifiedNotes.map(n => (
+                    <View key={n} style={{ backgroundColor: colors.surface, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border }}>
+                      <Text style={{ color: colors.text, fontWeight: 'bold' }}>{n}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={{ marginBottom: 16, zIndex: 10 }}>
+                <SimplePicker 
+                  label="Assumed Root"
+                  value={selectedRoot}
+                  options={identifiedNotes.map(n => ({ label: n, value: n }))}
+                  onSelect={setSelectedRoot}
+                  colors={colors}
+                />
+              </View>
+
+              <View style={{ marginBottom: 24 }}>
+                <Pressable onPress={() => setIsChordsExpanded(!isChordsExpanded)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: isChordsExpanded ? 12 : 0 }}>
+                  <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold' }}>Detected Chords</Text>
+                  <MaterialCommunityIcons name={isChordsExpanded ? "chevron-up" : "chevron-down"} size={24} color={colors.textSecondary} />
+                </Pressable>
+                
+                {isChordsExpanded && (
+                  detectedChords.length > 0 ? (
+                    detectedChords.map((chord, idx) => (
+                      <ChordResultItem key={`c-${idx}`} chord={chord} colors={colors} />
+                    ))
+                  ) : (
+                    <Text style={{ color: colors.textSecondary }}>No exact chords detected.</Text>
+                  )
+                )}
+              </View>
+
+              <View style={{ paddingBottom: 32 }}>
+                <Pressable onPress={() => setIsScalesExpanded(!isScalesExpanded)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: isScalesExpanded ? 12 : 0 }}>
+                  <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold' }}>Detected Scales (Root: {selectedRoot})</Text>
+                  <MaterialCommunityIcons name={isScalesExpanded ? "chevron-up" : "chevron-down"} size={24} color={colors.textSecondary} />
+                </Pressable>
+                
+                {isScalesExpanded && (
+                  detectedScales.length > 0 ? (
+                    <>
+                      {commonScales.length > 0 && (
+                        <View style={{ marginBottom: 16 }}>
+                          <Text style={{ color: colors.textSecondary, fontSize: 14, fontWeight: 'bold', marginBottom: 8, textTransform: 'uppercase' }}>Common Scales</Text>
+                          {commonScales.map((scaleMatch, idx) => (
+                            <ScaleResultItem key={`cs-${idx}`} scaleMatch={scaleMatch} colors={colors} />
+                          ))}
+                        </View>
+                      )}
+                      {otherScales.length > 0 && (
+                        <View>
+                          <Text style={{ color: colors.textSecondary, fontSize: 14, fontWeight: 'bold', marginBottom: 8, textTransform: 'uppercase' }}>Other Scales</Text>
+                          {otherScales.map((scaleMatch, idx) => (
+                            <ScaleResultItem key={`os-${idx}`} scaleMatch={scaleMatch} colors={colors} />
+                          ))}
+                        </View>
+                      )}
+                    </>
+                  ) : (
+                    <Text style={{ color: colors.textSecondary }}>No close scales detected.</Text>
+                  )
+                )}
+              </View>
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    );
+  };
+
   if (layoutMode === "fullscreen" || isLandscape) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
@@ -312,6 +524,7 @@ export default function PatternExplorerScreen() {
             </View>
           </View>
         </Modal>
+        {renderIdentifyModal()}
       </SafeAreaView>
     );
   }
@@ -343,6 +556,7 @@ export default function PatternExplorerScreen() {
       <View style={[styles.horizontalMenuArea, { backgroundColor: colors.background, shadowColor: colors.text }]}>
         {renderMenuControls()}
       </View>
+      {renderIdentifyModal()}
     </SafeAreaView>
   );
 }
