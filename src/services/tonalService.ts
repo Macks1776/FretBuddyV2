@@ -31,5 +31,9 @@ export const tonalService = {
 
   getIntervalFromSemitones: (semitones: number): string => {
     return Interval.fromSemitones(semitones);
+  },
+
+  getIntervalDistance: (note1: string, note2: string): string => {
+    return Interval.distance(note1, note2);
   }
 };

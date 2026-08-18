@@ -10,6 +10,8 @@ import ChordExplorer from "../src/components/ChordExplorer";
 import { useTheme } from "../src/hooks/useTheme";
 import { useOrientation } from "../src/hooks/useOrientation";
 import * as Haptics from "expo-haptics";
+import { Stack } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // @ts-ignore - no types available for this json
 import guitarDb from "@tombatossals/chords-db/lib/guitar.json";
@@ -56,14 +58,28 @@ export default function ChordExplorerScreen() {
   const formatChordName = (name: string) => {
     return name
       .replace(/ ?M$/g, "") // Plain Major triad (e.g. "EM" -> "E")
+      .replace(/Madd/g, " Add") // Major add chords (e.g. "DMadd9" -> "D Add9")
+      .replace(/madd/g, "m Add") // Minor add chords (e.g. "Dmadd9" -> "Dm Add9")
       .replace(/ ?M(\d+)/g, " Major $1") // Major extensions (e.g. "EM7" -> "E Major 7")
       .trim();
   };
 
   // Tonal chord detection
-  const detectedChords = Chord.detect(activePitches).map(formatChordName);
+  const detectedChordsRaw = Chord.detect(activePitches);
+  const mainChordRaw = detectedChordsRaw.length > 0 ? detectedChordsRaw[0] : null;
+  const detectedChords = detectedChordsRaw.map(formatChordName);
   const mainChord = detectedChords.length > 0 ? detectedChords[0] : null;
   const altChords = detectedChords.slice(1).join(", ");
+  
+  const getRootNote = (chordName: string | null) => {
+    if (!chordName) return null;
+    const parsed = Chord.get(chordName);
+    if (parsed.tonic) return parsed.tonic;
+    const match = chordName.split("/")[0].match(/^[A-G][#b]?/);
+    return match ? match[0] : null;
+  };
+  
+  const chordRoot = explorerMode === "dictionary" ? dictRoot : getRootNote(mainChordRaw);
 
   const handleStrum = () => {
     activePitches.forEach((pitch, index) => {
@@ -144,6 +160,7 @@ export default function ChordExplorerScreen() {
 
   const controls = (
     <ScrollView
+      style={!isLandscape ? { flex: 1 } : undefined}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={isLandscape ? styles.controlsScrollLandscape : styles.controlsScrollPortrait}
     >
@@ -167,15 +184,6 @@ export default function ChordExplorerScreen() {
           >
             <Text style={[styles.segmentText, { color: colors.textSecondary }, explorerMode === "dictionary" && [styles.segmentTextActive, { color: colors.tint }]]}>Dictionary</Text>
           </Pressable>
-        </View>
-
-        <View style={styles.toggleRow}>
-          <Text style={[styles.controlLabel, { color: colors.text }]}>Note Playback</Text>
-          <Switch 
-            value={isPlaybackActive} 
-            onValueChange={(v) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setLocalPlaybackEnabled(v); }}
-            trackColor={{ false: colors.border, true: colors.tint }}
-          />
         </View>
       </View>
 
@@ -244,9 +252,16 @@ export default function ChordExplorerScreen() {
           <View style={styles.resultsPanel}>
             <Text style={[styles.resultsLabel, { color: colors.textSecondary }]}>Detected Chord(s):</Text>
             {detectedChords.length > 0 ? (
-              <Text style={[styles.detectedChordsText, { color: colors.text }]}>
-                {detectedChords.join("  /  ")}
-              </Text>
+              <View style={styles.detectedChordsContainer}>
+                <Text style={[styles.detectedChordsText, { color: colors.text }]}>
+                  {mainChord}
+                </Text>
+                {altChords ? (
+                  <Text style={[styles.altChordsText, { color: colors.textSecondary }]}>
+                    {altChords}
+                  </Text>
+                ) : null}
+              </View>
             ) : (
               <Text style={[styles.detectedChordsText, { color: colors.textMuted }]}>
                 {activePitches.length > 0 ? "Unknown Chord" : "No notes selected"}
@@ -292,20 +307,39 @@ export default function ChordExplorerScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
+      <Stack.Screen 
+        options={{
+          headerRight: () => (
+            <Pressable 
+              style={{ padding: 8, marginRight: 4 }}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setLocalPlaybackEnabled(!isPlaybackActive);
+              }}
+            >
+              <MaterialCommunityIcons 
+                name={isPlaybackActive ? "ear-hearing" : "ear-hearing-off"} 
+                size={26} 
+                color={isPlaybackActive ? colors.tint : colors.textSecondary} 
+              />
+            </Pressable>
+          )
+        }} 
+      />
       {isLandscape ? (
         <View style={styles.landscapeLayout}>
           <View style={[styles.landscapeControls, { borderRightColor: colors.border }]}>
             {controls}
           </View>
           <View style={styles.fretboardWrapper}>
-            <ChordExplorer overrideTuningId={resolvedTuningId} isPlaybackActive={isPlaybackActive} />
+            <ChordExplorer overrideTuningId={resolvedTuningId} isPlaybackActive={isPlaybackActive} chordRoot={chordRoot} />
           </View>
         </View>
       ) : (
         <>
           {controls}
-          <View style={styles.fretboardWrapper}>
-            <ChordExplorer overrideTuningId={resolvedTuningId} isPlaybackActive={isPlaybackActive} />
+          <View style={styles.fretboardWrapperPortrait}>
+            <ChordExplorer overrideTuningId={resolvedTuningId} isPlaybackActive={isPlaybackActive} chordRoot={chordRoot} />
           </View>
         </>
       )}
@@ -356,12 +390,12 @@ const styles = StyleSheet.create({
   },
   controlsArea: {
     padding: 24,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     borderBottomWidth: 1,
     shadowOpacity: 0.05,
     shadowRadius: 15,
-    shadowOffset: { width: 0, height: -5 },
+    shadowOffset: { width: 0, height: 5 },
     elevation: 10,
     zIndex: 10,
   },
@@ -443,10 +477,19 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     fontWeight: "700",
   },
+  detectedChordsContainer: {
+    alignItems: "center",
+    marginVertical: 8,
+  },
   detectedChordsText: {
     fontSize: 24,
     fontWeight: "800",
-    marginVertical: 8,
+    textAlign: "center",
+  },
+  altChordsText: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 4,
     textAlign: "center",
   },
   actionButtons: {
@@ -473,5 +516,8 @@ const styles = StyleSheet.create({
   },
   fretboardWrapper: {
     flex: 1,
+  },
+  fretboardWrapperPortrait: {
+    height: 380,
   },
 });

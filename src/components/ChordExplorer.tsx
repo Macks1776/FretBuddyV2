@@ -12,9 +12,10 @@ import { tonalService } from "../services/tonalService";
 interface Props {
   overrideTuningId?: string;
   isPlaybackActive?: boolean;
+  chordRoot?: string | null;
 }
 
-export default function ChordExplorer({ overrideTuningId, isPlaybackActive = true }: Props = {}) {
+export default function ChordExplorer({ overrideTuningId, isPlaybackActive = true, chordRoot }: Props = {}) {
   const { fretStart, selectedFrets, activeTuningId, setFretSelection, capoFret } = useChordExplorerStore();
   const { customTunings, noteDisplayPreference } = useSettingsStore();
   const { playNote } = useToneStore();
@@ -109,14 +110,37 @@ export default function ChordExplorer({ overrideTuningId, isPlaybackActive = tru
             if (!isSelected) return null;
 
             const fretPC = tonalService.getPitchClass(fretPitch);
-            
+            let label = fretPC;
+            let displayInterval = false;
+            let formattedInterval = "";
+
+            if ((noteDisplayPreference === 'interval' || noteDisplayPreference === 'both') && chordRoot) {
+              const rootChroma = tonalService.getChroma(chordRoot) ?? 0;
+              const noteChroma = tonalService.getChroma(fretPC) ?? 0;
+              let semitones = (noteChroma - rootChroma + 12) % 12;
+              
+              const INTERVAL_MAP: Record<number, string> = {
+                0: "R", 1: "b2", 2: "2", 3: "b3", 4: "3", 5: "4", 
+                6: "b5", 7: "5", 8: "b6", 9: "6", 10: "b7", 11: "7"
+              };
+              formattedInterval = INTERVAL_MAP[semitones];
+              displayInterval = true;
+            }
+
+            if (noteDisplayPreference === 'interval' && displayInterval) {
+              label = formattedInterval;
+            } else if (noteDisplayPreference === 'both' && displayInterval) {
+              label = `${fretPC}\n${formattedInterval}`;
+            }
+
             return (
               <NoteBadge
                 bgColor="#3498db"
                 borderColor="#3498db"
                 borderWidth={0}
                 textColor="#fff"
-                label={fretPC}
+                label={label}
+                isSmallText={label.length > 2 || label.includes('\n')}
               />
             );
           }}

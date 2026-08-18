@@ -8,9 +8,10 @@ import {
 	Modal,
 	Switch,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useFocusEffect, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useOrientation } from "../src/hooks/useOrientation";
 import HapticService from "../src/services/HapticService";
 import ScaleExplorer from "../src/components/ScaleExplorer";
 import { useFretboardStore, LayoutMode } from "../src/store/useFretboardStore";
@@ -149,6 +150,8 @@ export default function FretboardScreen() {
 
 	const { customTunings, notePlaybackEnabled } = useSettingsStore();
 	const { colors } = useTheme();
+	const orientation = useOrientation();
+	const isLandscape = orientation === "landscape";
 	const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
 	const allTunings = [...DEFAULT_TUNINGS, ...customTunings];
@@ -251,27 +254,16 @@ export default function FretboardScreen() {
 					</View>
 				</View>
 
-				<View style={styles.controlRow}>
-					<SimplePicker
-						label="Tuning"
-						tooltip="Select the tuning for the instrument to update the fretboard notes."
-						value={activeTuningId}
-						options={allTunings.map((t) => ({ label: t.name, value: t.id }))}
-						onSelect={setActiveTuningId}
-						colors={colors}
-					/>
-				</View>
-
-                <View style={styles.toggleRow}>
-                    <LabelWithTooltip 
-                        label="Note Playback" 
-                    />
-                    <Switch 
-                        value={isPlaybackActive} 
-                        onValueChange={(v) => { HapticService.medium(); setLocalPlaybackEnabled(v); }}
-                        trackColor={{ false: colors.border, true: colors.tint }}
-                    />
-                </View>
+        <View style={styles.controlRow}>
+          <SimplePicker 
+            label="Tuning"
+            tooltip="Select the tuning for the instrument to update the fretboard notes."
+            value={activeTuningId}
+            options={allTunings.map((t) => ({ label: t.name, value: t.id }))}
+            onSelect={setActiveTuningId}
+            colors={colors}
+          />
+        </View>
 
 				{/* Scale Toggle & Controls */}
 				<View style={styles.toggleRow}>
@@ -595,15 +587,34 @@ export default function FretboardScreen() {
 		</ScrollView>
 	);
 
-	if (layoutMode === "fullscreen") {
-		return (
-			<SafeAreaView
-				style={[styles.safeArea, { backgroundColor: colors.background }]}
-				edges={["bottom", "left", "right"]}
-			>
-				<View style={styles.fretboardContainer}>
-					<ScaleExplorer isPlaybackActive={isPlaybackActive} />
-				</View>
+	  if (layoutMode === "fullscreen" || isLandscape) {
+    return (
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor: colors.background }]}
+        edges={["bottom", "left", "right"]}
+      >
+        <Stack.Screen 
+          options={{
+            headerRight: () => (
+              <Pressable 
+                style={{ padding: 8, marginRight: 4 }}
+                onPress={() => {
+                  HapticService.medium();
+                  setLocalPlaybackEnabled(!isPlaybackActive);
+                }}
+              >
+                <MaterialCommunityIcons 
+                  name={isPlaybackActive ? "ear-hearing" : "ear-hearing-off"} 
+                  size={26} 
+                  color={isPlaybackActive ? colors.tint : colors.textSecondary} 
+                />
+              </Pressable>
+            )
+          }} 
+        />
+        <View style={styles.fretboardContainer}>
+          <ScaleExplorer isPlaybackActive={isPlaybackActive} />
+        </View>
 
 				<Pressable
 					style={[
@@ -652,14 +663,33 @@ export default function FretboardScreen() {
 		);
 	}
 
-	return (
-		<SafeAreaView
-			style={[styles.safeArea, { backgroundColor: colors.background }]}
-			edges={["bottom", "left", "right"]}
-		>
-			<View style={styles.horizontalFretboardArea}>
-				<ScaleExplorer isPlaybackActive={isPlaybackActive} />
-			</View>
+	  return (
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+      edges={["bottom", "left", "right"]}
+    >
+      <Stack.Screen 
+        options={{
+          headerRight: () => (
+            <Pressable 
+              style={{ padding: 8, marginRight: 4 }}
+              onPress={() => {
+                HapticService.medium();
+                setLocalPlaybackEnabled(!isPlaybackActive);
+              }}
+            >
+              <MaterialCommunityIcons 
+                name={isPlaybackActive ? "ear-hearing" : "ear-hearing-off"} 
+                size={26} 
+                color={isPlaybackActive ? colors.tint : colors.textSecondary} 
+              />
+            </Pressable>
+          )
+        }} 
+      />
+      <View style={styles.horizontalFretboardArea}>
+        <ScaleExplorer isPlaybackActive={isPlaybackActive} />
+      </View>
 			<View
 				style={[
 					styles.horizontalMenuArea,

@@ -10,6 +10,9 @@ import { useTheme } from "../src/hooks/useTheme";
 import { ThemeColors } from "../src/theme/colors";
 import { tonalService } from "../src/services/tonalService";
 import LabelWithTooltip from "../src/components/ui/LabelWithTooltip";
+import { Stack } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useOrientation } from "../src/hooks/useOrientation";
 
 const NOTES_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 const NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -73,6 +76,8 @@ export default function PatternExplorerScreen() {
 
   const { customTunings, accidentalPreference, notePlaybackEnabled } = useSettingsStore();
   const { colors } = useTheme();
+  const orientation = useOrientation();
+  const isLandscape = orientation === "landscape";
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [isStringsExpanded, setIsStringsExpanded] = useState(false);
   const [isTriadsExpanded, setIsTriadsExpanded] = useState(false);
@@ -134,19 +139,6 @@ export default function PatternExplorerScreen() {
             onSelect={setActiveTuningId}
             colors={colors}
           />
-        </View>
-
-        <View style={styles.controlRow}>
-          <View style={styles.toggleRow}>
-            <LabelWithTooltip 
-              label="Note Playback" 
-            />
-            <Switch 
-              value={isPlaybackActive} 
-              onValueChange={(v) => { HapticService.medium(); setLocalPlaybackEnabled(v); }}
-              trackColor={{ false: colors.border, true: colors.tint }}
-            />
-          </View>
         </View>
 
         {/* Note Toggles Grid */}
@@ -273,9 +265,28 @@ export default function PatternExplorerScreen() {
     </ScrollView>
   );
 
-  if (layoutMode === "fullscreen") {
+  if (layoutMode === "fullscreen" || isLandscape) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
+        <Stack.Screen 
+          options={{
+            headerRight: () => (
+              <Pressable 
+                style={{ padding: 8, marginRight: 4 }}
+                onPress={() => {
+                  HapticService.medium();
+                  setLocalPlaybackEnabled(!isPlaybackActive);
+                }}
+              >
+                <MaterialCommunityIcons 
+                  name={isPlaybackActive ? "ear-hearing" : "ear-hearing-off"} 
+                  size={26} 
+                  color={isPlaybackActive ? colors.tint : colors.textSecondary} 
+                />
+              </Pressable>
+            )
+          }} 
+        />
         <View style={styles.fretboardContainer}>
           <PatternExplorer isPlaybackActive={isPlaybackActive} />
         </View>
@@ -307,6 +318,25 @@ export default function PatternExplorerScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
+      <Stack.Screen 
+        options={{
+          headerRight: () => (
+            <Pressable 
+              style={{ padding: 8, marginRight: 4 }}
+              onPress={() => {
+                HapticService.medium();
+                setLocalPlaybackEnabled(!isPlaybackActive);
+              }}
+            >
+              <MaterialCommunityIcons 
+                name={isPlaybackActive ? "ear-hearing" : "ear-hearing-off"} 
+                size={26} 
+                color={isPlaybackActive ? colors.tint : colors.textSecondary} 
+              />
+            </Pressable>
+          )
+        }} 
+      />
       <View style={styles.horizontalFretboardArea}>
         <PatternExplorer isPlaybackActive={isPlaybackActive} />
       </View>
