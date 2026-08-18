@@ -120,6 +120,12 @@ export default function SettingsScreen() {
     setNoteDurationPreference,
     setIsLeftHanded,
     setNotePlaybackEnabled,
+    metronomeGlobalPlayback,
+    setMetronomeGlobalPlayback,
+    drumMachineGlobalPlayback,
+    setDrumMachineGlobalPlayback,
+    backgroundAudioEnabled,
+    setBackgroundAudioEnabled,
     saveCustomTuning,
     deleteCustomTuning,
     notePlaybackEnabled,
@@ -368,6 +374,45 @@ export default function SettingsScreen() {
           <Switch 
             value={notePlaybackEnabled}
             onValueChange={setNotePlaybackEnabled}
+            trackColor={{ false: colors.border, true: colors.tint }}
+          />
+        </View>
+
+        <View style={styles.toggleRow}>
+          <LabelWithTooltip
+            label="Metronome Global Playback"
+            tooltip="Allow the metronome to continue playing when you navigate away from the metronome view."
+            tooltipTitle="Metronome Global Playback"
+          />
+          <Switch 
+            value={metronomeGlobalPlayback}
+            onValueChange={setMetronomeGlobalPlayback}
+            trackColor={{ false: colors.border, true: colors.tint }}
+          />
+        </View>
+
+        <View style={styles.toggleRow}>
+          <LabelWithTooltip
+            label="Drum Machine Global Playback"
+            tooltip="Allow the drum machine to continue playing when you navigate away from the drum machine view."
+            tooltipTitle="Drum Machine Global Playback"
+          />
+          <Switch 
+            value={drumMachineGlobalPlayback}
+            onValueChange={setDrumMachineGlobalPlayback}
+            trackColor={{ false: colors.border, true: colors.tint }}
+          />
+        </View>
+
+        <View style={styles.toggleRow}>
+          <LabelWithTooltip
+            label="Background Audio"
+            tooltip="Allow audio to continue playing when the app is minimized or the screen is locked."
+            tooltipTitle="Background Audio"
+          />
+          <Switch 
+            value={backgroundAudioEnabled}
+            onValueChange={setBackgroundAudioEnabled}
             trackColor={{ false: colors.border, true: colors.tint }}
           />
         </View>

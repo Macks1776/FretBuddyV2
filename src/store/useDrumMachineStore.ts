@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PRESET_SEQUENCES } from './presetSequences';
 
 export type CustomSound = {
   base?: string; // The base sound this custom sound was created from
@@ -112,6 +113,7 @@ export type DrumPart = {
   name: string;
   steps: number;
   resolution: number; // 8 for 1/8th, 16 for 1/16th, 32 for 1/32nd
+  swing?: number; // 0 to 100
   grid: number[][]; // [trackIndex][stepIndex] -> velocity
 };
 
@@ -125,6 +127,7 @@ export type DrumMachineState = {
   
   bpm: number;
   isPlaying: boolean;
+  autoFollow: boolean;
   timeSignature: string; // '4/4', '3/4'
   tracks: string[]; // Sound IDs mapped to each row
 
@@ -142,6 +145,7 @@ export type DrumMachineState = {
   clearGrid: () => void;
   togglePlay: () => void;
   setPlaying: (playing: boolean) => void;
+  setAutoFollow: (follow: boolean) => void;
   setBpm: (bpm: number) => void;
   setTimeSignature: (timeSignature: string) => void;
   setTrackSound: (trackIndex: number, soundId: string) => void;
@@ -157,6 +161,8 @@ export type DrumMachineState = {
   setPlaybackMode: (mode: 'part' | 'song') => void;
   setPartSteps: (id: string, steps: number) => void;
   setPartResolution: (id: string, resolution: number) => void;
+  setPartSwing: (id: string, swing: number) => void;
+  randomizePartVelocity: (id: string) => void;
   
   saveCustomSound: (id: string, sound: CustomSound) => void;
   deleteCustomSound: (id: string) => void;
@@ -168,6 +174,8 @@ export type DrumMachineState = {
   
   saveSequence: (name: string) => Promise<void>;
   loadSequence: (name: string) => Promise<void>;
+  deleteSequence: (name: string) => Promise<void>;
+  startNewSequence: () => void;
   loadStateFromStorage: () => Promise<void>;
 };
 
@@ -195,6 +203,7 @@ export const useDrumMachineStore = create<DrumMachineState>((set, get) => ({
 
   bpm: 120,
   isPlaying: false,
+  autoFollow: false,
   timeSignature: '4/4',
   tracks: [...DEFAULT_TRACKS],
   
@@ -235,6 +244,9 @@ export const useDrumMachineStore = create<DrumMachineState>((set, get) => ({
   
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setPlaying: (playing) => set({ isPlaying: playing }),
+  
+  setAutoFollow: (follow) => set({ autoFollow: follow }),
+
   setBpm: (bpm) => set({ bpm }),
   
   setTimeSignature: (timeSignature) => set((state) => {
@@ -385,6 +397,28 @@ export const useDrumMachineStore = create<DrumMachineState>((set, get) => ({
     return { parts: newParts };
   }),
 
+  setPartSwing: (id, swing) => set((state) => ({
+    parts: state.parts.map(p => p.id === id ? { ...p, swing } : p)
+  })),
+
+  randomizePartVelocity: (id) => set((state) => {
+    return {
+      parts: state.parts.map(p => {
+        if (p.id !== id) return p;
+        const newGrid = p.grid.map(track => 
+          track.map(stepVel => {
+            if (stepVel > 0) {
+              // Generate random velocity between 0.2 and 1.0
+              return 0.2 + (Math.random() * 0.8);
+            }
+            return 0;
+          })
+        );
+        return { ...p, grid: newGrid };
+      })
+    };
+  }),
+
   saveCustomSound: (id, sound) => set((state) => {
     const updated = { ...state.customSounds, [id]: sound };
     AsyncStorage.setItem('@drum_custom_sounds', JSON.stringify(updated)).catch(console.error);
@@ -470,6 +504,20 @@ export const useDrumMachineStore = create<DrumMachineState>((set, get) => ({
   },
   
   loadSequence: async (name) => {
+    if (PRESET_SEQUENCES[name]) {
+      const seq = PRESET_SEQUENCES[name];
+      set({
+        parts: seq.parts,
+        partSequence: seq.partSequence,
+        activePartId: seq.parts[0]?.id || 'A',
+        bpm: seq.bpm,
+        timeSignature: seq.timeSignature,
+        tracks: seq.tracks,
+        currentSequenceName: name,
+      });
+      return;
+    }
+    
     try {
       const stored = await AsyncStorage.getItem('@drum_sequences_v2');
       if (stored) {
@@ -492,6 +540,44 @@ export const useDrumMachineStore = create<DrumMachineState>((set, get) => ({
     }
   },
   
+  deleteSequence: async (name) => {
+    try {
+      const stored = await AsyncStorage.getItem('@drum_sequences_v2');
+      if (stored) {
+        const sequences = JSON.parse(stored);
+        if (sequences[name]) {
+          delete sequences[name];
+          await AsyncStorage.setItem('@drum_sequences_v2', JSON.stringify(sequences));
+          if (get().currentSequenceName === name) {
+            set({ currentSequenceName: null });
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  },
+  
+  startNewSequence: () => {
+    const defaultPart: DrumPart = {
+      id: 'A',
+      name: 'Part A',
+      steps: DEFAULT_TOTAL_STEPS,
+      resolution: 16,
+      grid: generateEmptyGrid(DEFAULT_TRACKS.length, DEFAULT_TOTAL_STEPS),
+    };
+    set({
+      parts: [defaultPart],
+      partSequence: ['A'],
+      activePartId: 'A',
+      bpm: 120,
+      timeSignature: '4/4',
+      tracks: [...DEFAULT_TRACKS],
+      currentSequenceName: null,
+      isPlaying: false,
+    });
+  },
+
   loadStateFromStorage: async () => {
     try {
       const customSoundsStr = await AsyncStorage.getItem('@drum_custom_sounds');

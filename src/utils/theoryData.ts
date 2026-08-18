@@ -78,6 +78,27 @@ export const SCALES: TheoryScale[] = [
     description: "A major scale with a flat 7th. The quintessential sound of blues and classic rock rhythm.",
     steps: ["W", "W", "H", "W", "W", "H", "W"],
     formula: ["1", "2", "3", "4", "5", "6", "b7"]
+  },
+  {
+    id: "phrygian",
+    name: "Phrygian Mode",
+    description: "A minor scale with a flat 2nd. It has a dark, exotic, Spanish, or Middle Eastern flavor often used in flamenco and metal.",
+    steps: ["H", "W", "W", "W", "H", "W", "W"],
+    formula: ["1", "b2", "b3", "4", "5", "b6", "b7"]
+  },
+  {
+    id: "lydian",
+    name: "Lydian Mode",
+    description: "A major scale with a raised 4th. It sounds dreamy, floating, and magical. Often used in film scores and prog rock.",
+    steps: ["W", "W", "W", "H", "W", "W", "H"],
+    formula: ["1", "2", "3", "#4", "5", "6", "7"]
+  },
+  {
+    id: "locrian",
+    name: "Locrian Mode",
+    description: "A minor scale with a flat 2nd and flat 5th. It is highly unstable, dark, and tense. Rarely used as a primary key.",
+    steps: ["H", "W", "W", "H", "W", "W", "W"],
+    formula: ["1", "b2", "b3", "4", "b5", "b6", "b7"]
   }
 ];
 
@@ -135,6 +156,24 @@ export const CHORDS: TheoryChord[] = [
     name: "Suspended 4th (sus4)",
     description: "A chord that demands resolution, replacing the 3rd with a 4th.",
     formula: ["1", "4", "5"]
+  },
+  {
+    id: "add_chords",
+    name: "Add Chords (e.g., add9)",
+    description: "An 'add' chord is a standard triad with one extra note added (like a 9th or 11th), but without the 7th. It provides a rich, colorful sound while maintaining the core major or minor quality.",
+    formula: ["1", "3", "5", "Added Note"]
+  },
+  {
+    id: "slash_chords",
+    name: "Slash Chords (e.g., D/F#)",
+    description: "A slash chord indicates a specific bass note to be played under a chord. The letter before the slash is the main chord, and the letter after the slash is the lowest note (bass note).",
+    formula: ["Chord", "/", "Bass Note"]
+  },
+  {
+    id: "inversions",
+    name: "Chord Inversions",
+    description: "An inversion rearranges the order of notes in a chord so the root is no longer the lowest note. In a 1st Inversion, the 3rd is in the bass (e.g., C/E). In a 2nd Inversion, the 5th is in the bass (e.g., C/G). They create smoother transitions between chords.",
+    formula: ["3rd Bass", "or", "5th Bass"]
   }
 ];
 

@@ -15,6 +15,9 @@ interface SettingsState {
   customTunings: Tuning[];
   isLeftHanded: boolean;
   notePlaybackEnabled: boolean;
+  metronomeGlobalPlayback: boolean;
+  drumMachineGlobalPlayback: boolean;
+  backgroundAudioEnabled: boolean;
   setNoteDisplayPreference: (pref: NoteDisplayPreference) => void;
   setColorPreference: (pref: ColorPreference) => void;
   setAccidentalPreference: (pref: AccidentalPreference) => void;
@@ -24,6 +27,9 @@ interface SettingsState {
   setNoteDurationPreference: (pref: NoteDurationPreference) => void;
   setIsLeftHanded: (isLeftHanded: boolean) => void;
   setNotePlaybackEnabled: (enabled: boolean) => void;
+  setMetronomeGlobalPlayback: (enabled: boolean) => void;
+  setDrumMachineGlobalPlayback: (enabled: boolean) => void;
+  setBackgroundAudioEnabled: (enabled: boolean) => void;
   saveCustomTuning: (tuning: Tuning) => void;
   deleteCustomTuning: (id: string) => void;
   getAlTuningOptions: () => Tuning[];
@@ -42,6 +48,9 @@ export const useSettingsStore = create<SettingsState>()(
       customTunings: [],
       isLeftHanded: false,
       notePlaybackEnabled: true,
+      metronomeGlobalPlayback: false,
+      drumMachineGlobalPlayback: false,
+      backgroundAudioEnabled: false,
 
       setNoteDisplayPreference: (pref) =>
         set({ noteDisplayPreference: pref }),
@@ -69,6 +78,15 @@ export const useSettingsStore = create<SettingsState>()(
 
       setNotePlaybackEnabled: (enabled: boolean) =>
         set({ notePlaybackEnabled: enabled }),
+
+      setMetronomeGlobalPlayback: (enabled: boolean) =>
+        set({ metronomeGlobalPlayback: enabled }),
+
+      setDrumMachineGlobalPlayback: (enabled: boolean) =>
+        set({ drumMachineGlobalPlayback: enabled }),
+
+      setBackgroundAudioEnabled: (enabled: boolean) =>
+        set({ backgroundAudioEnabled: enabled }),
 
       saveCustomTuning: (tuning) =>
         set((state) => {

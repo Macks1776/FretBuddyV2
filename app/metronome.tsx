@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, DeviceEventEmitter, Animated, Switch, Modal } from 'react-native';
 import { useMetronomeStore } from '../src/store/useMetronomeStore';
+import { useSettingsStore } from '../src/store/useSettingsStore';
 import { useTheme } from '../src/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import HapticService from '../src/services/HapticService';
 import { Play, Square, Minus, Plus, Settings, X } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
-import { Stack } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 
 export default function MetronomeScreen() {
   const { colors } = useTheme();
@@ -16,17 +17,23 @@ export default function MetronomeScreen() {
     setBpm, togglePlay, setPlaying, setBeatsPerBar, 
     setBackgroundFlashEnabled, setRingPulseEnabled, setSoundType
   } = useMetronomeStore();
-  
+  const { metronomeGlobalPlayback } = useSettingsStore();
   const [currentBeat, setCurrentBeat] = useState(0);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      setPlaying(false);
-    };
-  }, []);
+  // Stop playback when leaving screen if global playback is disabled
+  useFocusEffect(
+    useCallback(() => {
+      // Screen focused
+      return () => {
+        // Screen blurred
+        if (!useSettingsStore.getState().metronomeGlobalPlayback) {
+          useMetronomeStore.getState().setPlaying(false);
+        }
+      };
+    }, [])
+  );
 
   // Listen to beat events from ToneService
   useEffect(() => {

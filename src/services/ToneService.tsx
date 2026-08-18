@@ -235,7 +235,20 @@ export default function ToneService() {
             const partId = drumSequence[seqIndex];
             if (!partId || !drumParts[partId]) return;
             
-            const grid = drumParts[partId].grid;
+            const currentPart = drumParts[partId];
+            const grid = currentPart.grid;
+            
+            // Swing calculation
+            const swing = currentPart.swing || 0;
+            let timeToPlay = time;
+            
+            // Apply swing delay to odd steps (1, 3, 5...)
+            if (stepNumber % 2 !== 0 && swing > 0) {
+              const secondsPerBeat = 60.0 / drumBpm;
+              const stepDuration = secondsPerBeat * (4 / (currentPart.resolution || 16));
+              const swingDelay = (swing / 100) * (stepDuration * 0.5);
+              timeToPlay += swingDelay;
+            }
 
             // Play active tracks for this step
             for (let trackIdx = 0; trackIdx < grid.length; trackIdx++) {
@@ -243,12 +256,12 @@ export default function ToneService() {
               if (velocity > 0) {
                 let soundId = drumSounds[trackIdx];
                 let params = drumCustomSounds[soundId] || drumCustomSounds['kick'];
-                playDrumSound(params, time, velocity);
+                playDrumSound(params, timeToPlay, velocity);
               }
             }
 
             // Visual trigger
-            const timeUntilNote = time - audioContext.currentTime;
+            const timeUntilNote = timeToPlay - audioContext.currentTime;
             const timerId = setTimeout(() => {
               window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'DRUM_BEAT', step: stepNumber, seqIndex: seqIndex }));
             }, Math.max(0, timeUntilNote * 1000));
@@ -463,7 +476,7 @@ export default function ToneService() {
           if (data.type === 'METRONOME_BEAT') {
             DeviceEventEmitter.emit('onMetronomeBeat', data.beat);
           } else if (data.type === 'DRUM_BEAT') {
-            DeviceEventEmitter.emit('onDrumBeat', data.step);
+            DeviceEventEmitter.emit('onDrumBeat', data);
           } else {
             console.log("[ToneService]", data);
           }

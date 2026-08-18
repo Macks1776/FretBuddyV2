@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, DeviceEventEmitter, ScrollView, TextInput, Alert, Modal } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, DeviceEventEmitter, ScrollView, TextInput, Alert, Modal, Dimensions } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useDrumMachineStore } from '../../store/useDrumMachineStore';
-import { Play, Square, Minus, Plus, Save, PlusCircle, X, Copy, Trash2, Eraser, Settings2 } from 'lucide-react-native';
+import { Play, Square, Minus, Plus, Save, PlusCircle, X, Copy, Trash2, Eraser, Settings2, Dices } from 'lucide-react-native';
 import HapticService from '../../services/HapticService';
 import { LinearGradient } from 'expo-linear-gradient';
 import SequencerSaveLoadModal from './SequencerSaveLoadModal';
 import SoundDesignerModal from './SoundDesignerModal';
 import SoundSelectorModal from './SoundSelectorModal';
 import VelocityEditorModal from './VelocityEditorModal';
+import ChainEditorModal from './ChainEditorModal';
 
 
 const STEP_WIDTH = 40;
@@ -20,14 +21,16 @@ export default function SequencerView() {
     parts, partSequence, activePartId, bpm, isPlaying, timeSignature, tracks, customSounds, playbackMode,
     setBpm, togglePlay, toggleStep, loadStateFromStorage, clearGrid,
     addPart, renamePart, setActivePart, setPartSequence, duplicatePart, deletePart, setPlaybackMode,
-    setPartSteps, setPartResolution, setTrackSound, addTrack, removeTrack, setStepVelocity
+    setPartSteps, setPartResolution, setPartSwing, setTrackSound, addTrack, removeTrack, setStepVelocity, randomizePartVelocity, autoFollow, setAutoFollow
   } = useDrumMachineStore();
 
+  const gridScrollRef = useRef<ScrollView>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [currentSeqIndex, setCurrentSeqIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [designerVisible, setDesignerVisible] = useState(false);
   const [selectorVisible, setSelectorVisible] = useState(false);
+  const [chainEditorVisible, setChainEditorVisible] = useState(false);
   const [selectedTrackIndex, setSelectedTrackIndex] = useState<number | null>(null);
   const [editingStep, setEditingStep] = useState<{trackIdx: number, stepIdx: number, velocity: number} | null>(null);
   const [tapTimes, setTapTimes] = useState<number[]>([]);
@@ -45,6 +48,19 @@ export default function SequencerView() {
     const sub = DeviceEventEmitter.addListener('onDrumBeat', (data: { step: number, seqIndex: number }) => {
       setCurrentStep(data.step);
       setCurrentSeqIndex(data.seqIndex);
+
+      const state = useDrumMachineStore.getState();
+      if (state.autoFollow) {
+        if (state.playbackMode === 'song' && state.partSequence[data.seqIndex] !== state.activePartId) {
+          state.setActivePart(state.partSequence[data.seqIndex]);
+        }
+        
+        if (gridScrollRef.current) {
+          const screenWidth = Dimensions.get('window').width;
+          const offset = (data.step * STEP_WIDTH) - (screenWidth / 2) + (STEP_WIDTH / 2);
+          gridScrollRef.current.scrollTo({ x: Math.max(0, offset), animated: false });
+        }
+      }
     });
     return () => sub.remove();
   }, []);
@@ -97,10 +113,7 @@ export default function SequencerView() {
     return id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   };
 
-  const handleAddToSequence = (partId: string) => {
-    HapticService.light();
-    setPartSequence([...partSequence, partId]);
-  };
+
 
   const handleRemoveFromSequence = (index: number) => {
     HapticService.light();
@@ -174,10 +187,19 @@ export default function SequencerView() {
 
       {/* Song Sequencer (Order of Parts) */}
       <View style={styles.sequenceContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Song Sequence</Text>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8}}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginBottom: 0 }]}>Part Chain</Text>
+          <Pressable 
+            onPress={() => setChainEditorVisible(true)}
+            style={{flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: colors.border}}
+          >
+            <Settings2 color={colors.textSecondary} size={12} style={{ marginRight: 6 }} />
+            <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textSecondary }}>EDIT CHAIN</Text>
+          </Pressable>
+        </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sequenceRow}>
           {partSequence.map((partId, idx) => {
-            const isPlayingThisBlock = isPlaying && currentSeqIndex === idx;
+            const isPlayingThisBlock = isPlaying && playbackMode === 'song' && currentSeqIndex === idx;
             const partName = parts.find(p => p.id === partId)?.name || partId;
             return (
               <View key={idx} style={styles.sequenceBlockWrapper}>
@@ -210,21 +232,6 @@ export default function SequencerView() {
               </View>
             );
           })}
-          
-          {/* Add to Sequence Button */}
-          <View style={[styles.sequenceBlockWrapper, { marginLeft: 16 }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {parts.map(p => (
-                <Pressable
-                  key={p.id}
-                  style={[styles.sequenceBlock, { backgroundColor: `${colors.tint}20`, marginRight: 8, borderColor: colors.tint, borderWidth: 1, borderStyle: 'dashed' }]}
-                  onPress={() => handleAddToSequence(p.id)}
-                >
-                  <Text style={[styles.sequenceBlockText, { color: colors.tint }]}>+ {p.name}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
         </ScrollView>
       </View>
 
@@ -262,13 +269,13 @@ export default function SequencerView() {
 
         <View style={{ flexDirection: 'column', gap: 16, width: '100%' }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
               <Text style={{ color: colors.textSecondary, fontSize: 12, marginRight: 8 }}>Name:</Text>
               <TextInput
-                style={[styles.partNameInput, { flex: 1, color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+                style={[styles.partNameInput, { width: 90, color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
                 value={activePart.name}
                 onChangeText={(text) => renamePart(activePart.id, text)}
-                maxLength={15}
+                maxLength={10}
                 placeholderTextColor={colors.textMuted}
               />
             </View>
@@ -290,6 +297,15 @@ export default function SequencerView() {
                 }}
               >
                 <Eraser color={colors.textSecondary} size={16} />
+              </Pressable>
+              <Pressable 
+                style={[styles.iconBtn, { marginLeft: 8, backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.border, padding: 8 }]}
+                onPress={() => {
+                  HapticService.light();
+                  randomizePartVelocity(activePart.id);
+                }}
+              >
+                <Dices color={colors.textSecondary} size={16} />
               </Pressable>
               <Pressable 
                 style={[styles.iconBtn, { marginLeft: 8, backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.border, padding: 8 }]}
@@ -346,6 +362,17 @@ export default function SequencerView() {
                  <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700' }}>1/{activePart.resolution || 16}</Text>
                </Pressable>
             </View>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 10, marginRight: 8 }}>SWING:</Text>
+              <Pressable onPress={() => { HapticService.light(); setPartSwing(activePart.id, Math.max(0, (activePart.swing || 0) - 10)); }} style={styles.iconBtn}>
+                <Minus color={colors.textSecondary} size={14} />
+              </Pressable>
+              <Text style={{ color: colors.text, marginHorizontal: 4, fontSize: 12, fontWeight: '700' }}>{activePart.swing || 0}%</Text>
+              <Pressable onPress={() => { HapticService.light(); setPartSwing(activePart.id, Math.min(100, (activePart.swing || 0) + 10)); }} style={styles.iconBtn}>
+                <Plus color={colors.textSecondary} size={14} />
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
@@ -381,7 +408,7 @@ export default function SequencerView() {
         </View>
 
         {/* Scrollable Steps */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollGrid}>
+        <ScrollView ref={gridScrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollGrid}>
           {tracks.map((soundId, trackIdx) => (
             <View key={trackIdx} style={[styles.trackRow, { height: STEP_HEIGHT, marginBottom: 8 }]}>
               {Array.from({ length: stepsPerPart }).map((_, stepIdx) => {
@@ -389,7 +416,7 @@ export default function SequencerView() {
                 const isActive = velocity > 0;
                 
                 // Highlight if playing AND the current playing part in the sequence is the one we are editing
-                const playingPartId = partSequence[currentSeqIndex];
+                const playingPartId = playbackMode === 'song' ? partSequence[currentSeqIndex] : activePartId;
                 const isCurrent = currentStep === stepIdx && isPlaying && playingPartId === activePart.id;
                 
                 const isBarStart = stepIdx % stepsPerPart === 0;
@@ -455,7 +482,7 @@ export default function SequencerView() {
             style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16, backgroundColor: playbackMode === 'song' ? colors.tint : 'transparent' }}
             onPress={() => { HapticService.light(); setPlaybackMode('song'); }}
           >
-            <Text style={{ fontWeight: '700', fontSize: 12, color: playbackMode === 'song' ? '#FFF' : colors.textMuted }}>SONG</Text>
+            <Text style={{ fontWeight: '700', fontSize: 12, color: playbackMode === 'song' ? '#FFF' : colors.textMuted }}>CHAIN</Text>
           </Pressable>
         </View>
 
@@ -474,12 +501,20 @@ export default function SequencerView() {
           </LinearGradient>
         </Pressable>
         
-        {/* Placeholder to balance the row if needed, or just let gap handle it */}
-        <View style={{ width: 100 }} />
+        {/* Auto Follow Toggle */}
+        <View style={{ width: 100 }}>
+          <Pressable 
+            style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, backgroundColor: autoFollow ? `${colors.tint}20` : 'transparent', borderWidth: 1, borderColor: autoFollow ? colors.tint : colors.border, alignItems: 'center' }}
+            onPress={() => { HapticService.light(); setAutoFollow(!autoFollow); }}
+          >
+            <Text style={{ fontWeight: '700', fontSize: 10, color: autoFollow ? colors.tint : colors.textMuted }}>FOLLOW</Text>
+          </Pressable>
+        </View>
       </View>
 
       <SequencerSaveLoadModal visible={modalVisible} onClose={() => setModalVisible(false)} />
       <SoundDesignerModal visible={designerVisible} onClose={() => setDesignerVisible(false)} />
+      <ChainEditorModal visible={chainEditorVisible} onClose={() => setChainEditorVisible(false)} />
       <SoundSelectorModal 
         visible={selectorVisible} 
         onClose={() => setSelectorVisible(false)}
@@ -649,16 +684,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
   },
   partNameInput: {
     borderWidth: 1,
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 6,
     fontSize: 14,
     fontWeight: '600',
-    minWidth: 120,
   },
   gridContainer: {
     flexDirection: 'row',
